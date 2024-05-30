@@ -2,3 +2,4 @@
 models/fasttext/cc.ca.300.bin.gz
 *.npy
 *.bin
+__pycache__
