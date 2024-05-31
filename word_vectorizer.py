@@ -125,8 +125,19 @@ class WordVectorizer:
 		self.caps = caps
 
 		# Check if the tokenized texts already exist
-		if not force_tokenize and os.path.exists(self.tokenized_texts_path):
+		if (not force_tokenize) and (os.path.exists(self.tokenized_texts_path)):
 			print(f'Tokenized texts in file {caps_file_path if caps else file_path} already exist.')
+			return
+		
+		# In case caps is False, we check if the tokenized texts with caps exist and convert them to lowercase
+		if (not force_tokenize) and (not caps) and (os.path.exists(caps_file_path)):
+			print(f'Tokenized texts in file {file_path} not found, but uppercase tokenized texts found in {caps_file_path}. Converting to lowercase.')
+			with open(caps_file_path, 'rb') as f:
+				tokenized_texts = pkl.load(f)
+
+			# Save lowercase tokenized texts
+			with open(file_path, 'wb') as f:
+				pkl.dump([[token.lower() for token in text] for text in tokenized_texts], f)
 			return
 
 		# Tokenize the texts if they don't exist
@@ -177,6 +188,7 @@ class WordVectorizer:
 		vectorizer: str='word2vec', 
 		model_type: str='skipgram', 
 		vector_size: int=100,
+		window: int=5,
 		workers: int=1,
 		save: bool=True,
 		force_train: bool=False
@@ -192,6 +204,8 @@ class WordVectorizer:
 			The model type to use. Options are 'skipgram' and 'cbow'.
 		vector_size : int
 			The size of the vectors to use.
+		window : int
+			The window size to use in the training process.
 		workers : int
 			The number of workers to use in the training process (CPU threads).
 		save : bool
@@ -205,8 +219,10 @@ class WordVectorizer:
 			The object containing the trained model (from gensim).
 		"""
 		assert vectorizer in ['word2vec', 'fasttext'], 'Vectorizer not available.'
-		assert model_type in ['skipgram', 'cbow'], 'Model type not available.'
+		assert model_type in ['skipgram', 'sg', 'cbow'], 'Model type not available.'
 		assert workers > 0, 'Workers must be greater than 0.'
+		assert vector_size > 0, 'Vector size must be greater than 0.'
+		assert window > 0, 'Window size must be greater than 0.'
 
 		assert os.path.exists(self.tokenized_texts_path), 'Tokenized texts not loaded.'
 		with open(self.tokenized_texts_path, 'rb') as f:
@@ -215,7 +231,7 @@ class WordVectorizer:
 		self.model_name = vectorizer
 		self.model_type_name = model_type
 		vectorizer_key_name = 'w2v' if vectorizer == 'word2vec' else 'ft'
-		model_type_key_name = 'sg' if model_type == 'skipgram' else 'cbow'
+		model_type_key_name = 'sg' if model_type in ['skipgram', 'sg'] else 'cbow'
 		caps_key_name = '_caps_' if self.caps else '_'
 		self.model_path = f'./models/{vectorizer}/{vectorizer_key_name}_{model_type_key_name}_{vector_size}_{self.tokenizer_name}{caps_key_name}{self.dataset_name}_{self.size_mb}mb.model'
 
@@ -230,11 +246,23 @@ class WordVectorizer:
 
 		# Train the word2vec model
 		if vectorizer == 'word2vec':
-			self.model = Word2Vec(sentences=tokenized_texts, vector_size=vector_size, window=5, min_count=5, workers=workers)
+			self.model = Word2Vec(
+				sentences=tokenized_texts, 
+				vector_size=vector_size, 
+				sg=1 if model_type in ['skipgram', 'sg'] else 0,
+				window=window, 
+				min_count=5, 
+				workers=workers)
 
 		# Train the fasttext model
 		elif vectorizer == 'fasttext':
-			self.model = FastText(sentences=tokenized_texts, vector_size=vector_size, window=5, min_count=5, workers=workers)
+			self.model = FastText(
+				sentences=tokenized_texts, 
+				vector_size=vector_size,
+				sg=1 if model_type in ['skipgram', 'sg'] else 0,
+				window=window, 
+				min_count=5, 
+				workers=workers)
 
 		if save:
 			self.model.save(self.model_path)
