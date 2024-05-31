@@ -3,9 +3,13 @@ import pickle as pkl
 from gensim.models import Word2Vec
 from gensim.models import FastText
 from datasets import load_dataset
+import nltk
 from nltk.tokenize import word_tokenize
 import spacy
 import warnings
+from typing import Literal
+
+nltk.download('punkt')
 
 class WordVectorizer:
 	def __init__(self) -> None:
@@ -13,8 +17,9 @@ class WordVectorizer:
 		Initializes the WordVectorizer class.
 		"""
 		self.dataset_name: str = ''
-		self.size_mb: int = 0
+		self.size_mb: int|Literal['max'] = 'max'
 		self.tokenizer_name: str = ''
+		self.caps: bool = False
 		self.model_name: str = ''
 		self.model: Word2Vec | FastText | None = None
 		self.model_type_name: str = ''
@@ -23,7 +28,7 @@ class WordVectorizer:
 		self.tokenized_texts_path: str = ''
 		self.model_path: str = ''
 
-	def load_data(self, dataset: str = 'cat_gc', size_mb: int = 100) -> None:
+	def load_data(self, dataset: str = 'cat_gc', size_mb: int|Literal['max'] = 100) -> None:
 		"""
 		Loads the dataset and filters it to a specific size.
 
@@ -31,14 +36,15 @@ class WordVectorizer:
 		----------
 		dataset : str
 			The dataset to load. Currently only 'cat_gc' is available.
-		size_mb : int
+		size_mb : int|Literal['max']
 			The size to filter the dataset to in MB. Common values are 100, 500, 1000.
+			If 'max' is selected, the full dataset is loaded.
 		"""
 		assert dataset in ['cat_gc'], 'Dataset not available.'
-		assert size_mb > 0, 'Size must be greater than 0MB.'
+		assert size_mb > 0 if isinstance(size_mb, int) else size_mb == 'max', 'Size must be greater than 0 or "max".'
 
 		self.dataset_name = dataset
-		self.size_mb = size_mb
+		self.size_mb = size_mb 
 		self.raw_texts_path = f'./data/raw_{dataset}_{size_mb}mb.pkl'
 
 		# Check if the dataset already exists
@@ -57,7 +63,10 @@ class WordVectorizer:
 		full_raw_texts = raw_dataset["text"]
 
 		# Filter and tokenize the dataset
-		raw_texts = self.__filter_dataset_size(raw_texts=full_raw_texts, size_mb=size_mb)
+		if size_mb == 'max':
+			raw_texts = full_raw_texts
+		else:
+			raw_texts = self.__filter_dataset_size(raw_texts=full_raw_texts, size_mb=size_mb)
 
 		# Save the filtered dataset
 		with open(self.raw_texts_path, 'wb') as f:
@@ -113,6 +122,7 @@ class WordVectorizer:
 
 		self.tokenizer_name = tokenizer
 		self.tokenized_texts_path = caps_file_path if caps else file_path
+		self.caps = caps
 
 		# Check if the tokenized texts already exist
 		if not force_tokenize and os.path.exists(self.tokenized_texts_path):
@@ -204,7 +214,10 @@ class WordVectorizer:
 
 		self.model_name = vectorizer
 		self.model_type_name = model_type
-		self.model_path = f'./models/{vectorizer}/{vectorizer}_{model_type}_{vector_size}_{self.dataset_name}_{self.size_mb}mb.model'
+		vectorizer_key_name = 'w2v' if vectorizer == 'word2vec' else 'ft'
+		model_type_key_name = 'sg' if model_type == 'skipgram' else 'cbow'
+		caps_key_name = '_caps_' if self.caps else '_'
+		self.model_path = f'./models/{vectorizer}/{vectorizer_key_name}_{model_type_key_name}_{vector_size}_{self.tokenizer_name}{caps_key_name}{self.dataset_name}_{self.size_mb}mb.model'
 
 		# Check if the model already exists
 		if not force_train and os.path.exists(self.model_path):
