@@ -66,13 +66,8 @@ mare	nadó	7,85
 beure	mare	2,65
 cotxe	automòbil	8,94
 joia	gemma	8,96
-viatge	viatge	9.29	###
 noi	nano	8,83
-costa	costa	9.10	###
 asil	manicomi	8,87
-mag	mag	9.02	###
-migdia	migdia	9.29	###
-forn	estufa	8,79	#
 menjar	fruita	7,52
 ocells	gall	7.10
 grua	ocells	7,38
@@ -96,7 +91,6 @@ cadena	migdia	0,54
 pollastre	viatge	0,62
 diners	dòlar	8,42
 diners	efectiu	9.08
-moneda	moneda	9,04	####
 riquesa	diners	8,27
 diners	propietat	7,57
 possessió	diners	7.29
@@ -146,9 +140,7 @@ artefacte	tassa	2.92
 objecte	tassa	3.69
 entitat	tassa	2.15
 tassa	beguda	7,25
-tassa	menjar	5,00	###
 substància	tassa	1,92
-tassa	líquid	5,90	###
 gat	jaguar	7.42
 cotxe	jaguar	7.27
 secretari	energia	1.81
@@ -161,12 +153,9 @@ investigació	FBI	8.31
 esforç	investigació	4.59
 Aigua	Mart	2,94
 Mart	científic	5.63
-notícia	report	8.16	###
-paisatge	canó	7,53	###
 superfície	imatge	4.56
 espai	descobriment	6.34
 filtració	aigua	6.56
-rètol	recés	2.38	#
 Notícies	dimecres	2.22
 milla	quilòmetre	8,66
 notícies	ordinador	4.47
@@ -180,7 +169,6 @@ Japonès	americà	6,50
 història	teatre	3.91
 lema	voluntari	2.56
 reconeixement	prejudici	3.00
-valor	condecoració	5,63	##
 segle	any	7.59
 nació	segle	3.16
 retard	racisme	1.19
@@ -209,7 +197,6 @@ criteri	raó	5.91
 cent	percentatge	7,38
 Harvard	Yale	8.13
 infraestructura	hospital	4.63
-corredor	mort	5.25	##
 mort	presoner	5.03
 prova	advocat	6.69
 vida	mort	7,88
@@ -231,10 +218,7 @@ targeta	crèdit	8.06
 informació	crèdit	5.31
 reserva	hotel	8.03
 diners	queviures	5,94
-acord	inscripció	6.00	h	##
-arranjament	allotjament	5.41	##
 mes	hotel	1.81
-tipus	tipus	8,97	##
 arribada	hotel	6.00
 armari	llit	6,72
 roba	armari	8.00
@@ -246,8 +230,6 @@ lloc	carrer	6.44
 carrer	avinguda	8,88
 bloc	carrer	6.88
 nens	carrer	4,94
-proximitat	llistat	2.56	##
-categoria	llistat	6.38	##
 telèfon	mòbil	7.81
 pujada	producció	1,75
 índex	referència	4,25
@@ -255,7 +237,6 @@ comerç	mitjans	3.88
 guany	mitjans	2,88
 pagament	dividends	7,63
 càlcul	dividends	6.48
-càlcul	càlcul	8.44	##
 mercat	divises	7,50
 Petroli	OPEC	8,59
 estoc	petroli	6,34
@@ -264,11 +245,9 @@ anunci	avís	6.00
 advertència	beneficis	3,88
 pèrdues	beneficis	7,63
 dòlar	ien	7,78
-dòlar	dòlar	9,22	##
 benefici	dòlars	7,38
 pèrdua	dòlars	6,09
 programari	ordinador	8.50
-maquinari	xarxa	8.31	##
 equip	telèfon	7.13
 equip	fabricant	5.91
 cotxe	luxe	6,47
@@ -282,7 +261,6 @@ equip	partit	7.69
 sprint	marató	7,47
 sèrie	partit	6.19
 derrota	partit	6.97
-set	sèrie	3.56	##
 marisc	mar	7,47
 marisc	menjar	8.34
 llagosta	marisc	8,70
@@ -302,7 +280,7 @@ sequera	estiu	7.16
 natura	estiu	5,63
 dia	alba	7.53
 medi	natura	8.31
-ecologia	ambient	8.81	#
+ecologia	ambient	8.81
 natura	home	6.25
 home	dona	8.30
 home	governador	5.25
@@ -313,7 +291,6 @@ centrar-se	vida	4.06
 equip	producció	6.25
 pel·lícula	televisió	7.72
 baralla	amants	6.19
-espectador	serial	2.97	##
 possibilitat	noia	1,94
 desenvolupament	població	3,75
 importància	moralitat	3.31
@@ -323,7 +300,7 @@ igualtat	gènere	6.41
 canviar	actitud	5.44
 planificació	familiar	6.25
 indústria	l'òpera	2.63
-aproximació	sucre	0,88	##
+aproximació	sucre	0,88
 institució	pràctica	3.19
 ministeri	cultura	4.69
 repte	problema	6.75
