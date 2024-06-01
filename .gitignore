@@ -5,3 +5,4 @@ models/fasttext/cc.ca.300.bin.gz
 *.bin
 *.pkl
 __pycache__
+ZZZ_TempCodeRunnerFile.py
