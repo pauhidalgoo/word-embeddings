@@ -117,6 +117,8 @@ def evaluate_models(save: bool=True) -> pd.DataFrame:
 ################################################################################
 # Functions to generate the plots
 
+# Calculate the size of the full dataset in MB
+print("Calculating the size of the full dataset in MB to adjust the scale of the plots...")
 FULL_DATA_SIZE_MB = int(round(calculate_full_dataset_size(), 0))
 
 def generate_model_barplot(results_df: pd.DataFrame, metric: str, family: str='all') -> None:
@@ -145,6 +147,9 @@ def generate_model_barplot(results_df: pd.DataFrame, metric: str, family: str='a
 
 	# Sort the values by the metric (descending order, except for 'OOV Ratio')
 	results_filtered_df = results_filtered_df.sort_values(by=metric, ascending=(metric == 'OOV Ratio'))
+
+	# Remove .model from the model names
+	results_filtered_df['Model'] = results_filtered_df['Model'].apply(lambda x: x.removesuffix('.model'))
 
 	# Generate the barplot
 	plt.figure(figsize=(10, 6))
@@ -226,7 +231,7 @@ def generate_size_plot(results_df: pd.DataFrame, metric: str, family: str) -> No
 	results_filtered_df['Size'] = results_filtered_df['Model'].apply(lambda x: x.split('_')[-1].split('.')[0].removesuffix('mb'))
 	results_filtered_df['Size'] = results_filtered_df['Size'].apply(lambda x: int(x) if x != 'max' else FULL_DATA_SIZE_MB)
 
-	results_filtered_df['Model'] = results_filtered_df['Model'].apply(lambda x: '_'.join(x.split('_')[:-2]))
+	results_filtered_df['Model'] = results_filtered_df['Model'].apply(lambda x: '_'.join(x.split('_')[:-1]))
 
 	# Define the ticks and labels for the x-axis
 	ticks = results_filtered_df['Size'].unique()
