@@ -6,8 +6,11 @@ from datasets import load_dataset
 import nltk
 from nltk.tokenize import word_tokenize
 import spacy
+from sklearn.manifold import TSNE
+import matplotlib.pyplot as plt
+import seaborn as sns
 import warnings
-from typing import Literal, Iterator
+from typing import Literal, Iterator, Any
 
 nltk.download('punkt')
 
@@ -29,6 +32,32 @@ class WordVectorizer:
 		self.raw_texts_path: str = ''
 		self.tokenized_texts_path: str = ''
 		self.model_path: str = ''
+	
+	def __getattr__(self, attr: str) -> Any:
+		"""
+		Overrides the default __getattr__ method to access the model attributes.
+		
+		Parameters
+		----------
+		attr : str
+			The attribute name being accessed.
+		
+		Returns
+		-------
+		Any
+			The attribute from the model if it exists.
+
+		Raises
+		------
+		AttributeError
+			If the attribute does not exist in the model.
+		"""
+		assert self.model is not None, 'Model not trained.'
+		
+		try:
+			return getattr(self.model, attr)
+		except AttributeError:
+			raise AttributeError(f"'WordVectorizer' (model of class {self.model.__class__.__name__}) object has no attribute '{attr}'.")
 
 	def load_data(self, dataset: str = 'cat_gc', size_mb: int|Literal['max'] = 100) -> None:
 		"""
@@ -254,7 +283,7 @@ class WordVectorizer:
 		workers: int=1,
 		save: bool=True,
 		force_train: bool=False
-		) -> Word2Vec | FastText:
+		) -> None:
 		"""
 		Trains the word vectorizer with the dataset.
 
@@ -274,11 +303,6 @@ class WordVectorizer:
 			Whether to save the model to the './models' folder.
 		force_train : bool
 			Whether to force the training of the model even if it already exists.
-
-		Returns
-		-------
-		Word2Vec or FastText
-			The object containing the trained model (from gensim).
 		"""
 		assert vectorizer in ['word2vec', 'fasttext'], 'Vectorizer not available.'
 		assert model_type in ['skipgram', 'sg', 'cbow'], 'Model type not available.'
@@ -300,7 +324,7 @@ class WordVectorizer:
 				self.model = Word2Vec.load(self.model_path)
 			elif vectorizer == 'fasttext':
 				self.model = FastText.load(self.model_path)
-			return self.model
+			return
 		
 		# Load the tokenized texts
 		assert os.path.exists(self.tokenized_texts_path), 'Tokenized texts not loaded.'
@@ -332,6 +356,32 @@ class WordVectorizer:
 
 		if save:
 			self.model.save(self.model_path)
+	
+	def tsne(self, num_words: int=100) -> None:
+		"""
+		Performs t-SNE on the word vectors and plots the results.
 
-		return self.model
+		Parameters
+		----------
+		num_words : int
+			The number of words to plot.
+		"""
+		assert num_words > 0, 'Number of words must be greater than 0.'
+		assert self.model is not None, 'Model not trained.'
+
+		# Get the word vectors sorted by frequency
+		word_vectors = self.model.wv.vectors
+		word_labels = self.model.wv.index_to_key
+
+		# Perform t-SNE
+		tsne = TSNE(n_components=2, random_state=0, n_iter=10000, perplexity=5)
+		tsne_results = tsne.fit_transform(word_vectors[:num_words])
+
+		# Plot the results
+		plt.figure(figsize=(16, 16))
+		for i, label in enumerate(word_labels[:num_words]):
+			x, y = tsne_results[i, :]
+			plt.scatter(x, y)
+			plt.annotate(label, xy=(x, y), xytext=(5, 2), textcoords='offset points', ha='right', va='bottom')
+		plt.show()
 		
