@@ -1,5 +1,5 @@
-#	The	WordSimilarity-353	Test	collection	(http://www.cs.technion.ac.il/~gabr/resources/data/wordsim353/)
-#	Word	1	Word	2	human	(mean)
+#	The	WordSimilarity-353	Test	Collection	(http://www.cs.technion.ac.il/~gabr/resources/data/wordsim353/)
+#	Word	1	Word	2	Human	(mean)
 amor	sexe	6.77
 gat	tigre	7,35
 tigre	tigre	10.00	h
@@ -22,7 +22,7 @@ intel·ligent	estúpid	5.81
 empresa	accions	7.08
 borsa	mercat	8.08
 estoc	telèfon	1.62
-estoc	cd	1.31
+estoc	CD	1.31
 estoc	jaguar	0,92
 estoc	ou	1,81
 fertilitat	òvul	6,69
@@ -37,17 +37,17 @@ col	rei	0,23
 rei	reina	8,58
 torre	rei	5,92
 bisbe	rabí	6,69
-jerusalem	israel	8.46
-jerusalem	palestina	7,65
+Jerusalem	Israel	8.46
+Jerusalem	Palestina	7,65
 sant	sexe	1.62
 follar	sexe	9.44
-maradona	futbol	8.62
+Maradona	futbol	8.62
 futbol	bàsquet	6,81
 futbol	tennis	6,63
 raqueta	tennis	7,56
-arafat	pau	6,73
-arafat	terror	7,65
-arafat	jackson	2,50
+Arafat	pau	6,73
+Arafat	terror	7,65
+Arafat	Jackson	2,50
 llei	advocat	8.38
 estrella	pel·lícula	7.38
 pel·lícula	crispetes	6.19
@@ -113,7 +113,7 @@ psicologia	por	6,85
 psicologia	depressió	7.42
 clínica	psicologia	6.58
 metge	psicologia	6.42
-psicologia	freud	8.21
+psicologia	Freud	8.21
 psicologia	ment	7.69
 psicologia	salut	7.23
 ciència	psicologia	6.71
@@ -148,15 +148,15 @@ secretari	senat	5.06
 laboratori	energia	5.09
 laboratori	informàtica	6.78
 secret	arma	6.06
-empremta	fbi	6.94
-investigació	fbi	8.31
+empremta	FBI	6.94
+investigació	FBI	8.31
 esforç	investigació	4.59
-aigua	mart	2,94
-mart	científic	5.63
+Aigua	Mart	2,94
+Mart	científic	5.63
 superfície	imatge	4.56
 espai	descobriment	6.34
 filtració	aigua	6.56
-notícies	dimecres	2.22
+Notícies	dimecres	2.22
 milla	quilòmetre	8,66
 notícies	ordinador	4.47
 superfície	territori	5.34
@@ -165,7 +165,7 @@ medalla	president	3.00
 tropes	guerra	8.13
 número	registre	6.31
 pell	ull	6.22
-japonès	americà	6,50
+Japonès	americà	6,50
 història	teatre	3.91
 lema	voluntari	2.56
 reconeixement	prejudici	3.00
@@ -187,7 +187,7 @@ hospital	ictus	7.03
 mort	discapacitat	5,47
 emergència	víctima	6.47
 recuperació	tractament	7.91
-associació	revistes	4.97
+Associació	revistes	4.97
 personal	doctor	5.00
 responsabilitat	metge	5.19
 assegurança	responsabilitat	7.03
@@ -195,7 +195,7 @@ centre	escola	3.44
 motiu	hipertensió	2.31
 criteri	raó	5.91
 cent	percentatge	7,38
-harvard	yale	8.13
+Harvard	Yale	8.13
 infraestructura	hospital	4.63
 mort	presoner	5.03
 prova	advocat	6.69
@@ -204,7 +204,7 @@ termini	vida	4,50
 semblança	paraules	4.75
 recomanació	consell	4.47
 entrevista	governador	3.25
-país	opec	5.63
+País	OPEC	5.63
 ambient	pau	3.69
 assegurança	pau	2.94
 territori	quilòmetre	5,28
@@ -238,7 +238,7 @@ guany	mitjans	2,88
 pagament	dividends	7,63
 càlcul	dividends	6.48
 mercat	divises	7,50
-petroli	opec	8,59
+Petroli	OPEC	8,59
 estoc	petroli	6,34
 producció	anunci	3.38
 anunci	avís	6.00
@@ -267,7 +267,7 @@ llagosta	marisc	8,70
 menjar	llagosta	7,81
 vi	llagosta	5,70
 preparació	menjar	6.22
-arxiu	vídeo	6.34
+Arxiu	vídeo	6.34
 inici	any	4.06
 inici	partit	4.47
 ronda	joc	5.97
@@ -295,7 +295,7 @@ possibilitat	noia	1,94
 desenvolupament	població	3,75
 importància	moralitat	3.31
 moralitat	matrimoni	3.69
-mèxic	brasil	7,44
+Mèxic	Brasil	7,44
 igualtat	gènere	6.41
 canviar	actitud	5.44
 planificació	familiar	6.25
