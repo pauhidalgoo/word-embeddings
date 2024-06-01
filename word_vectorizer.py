@@ -286,10 +286,6 @@ class WordVectorizer:
 		assert vector_size > 0, 'Vector size must be greater than 0.'
 		assert window > 0, 'Window size must be greater than 0.'
 
-		assert os.path.exists(self.tokenized_texts_path), 'Tokenized texts not loaded.'
-		with open(self.tokenized_texts_path, 'rb') as f:
-			tokenized_texts = pkl.load(f)
-
 		self.model_name = vectorizer
 		self.model_type_name = model_type
 		vectorizer_key_name = 'w2v' if vectorizer == 'word2vec' else 'ft'
@@ -305,6 +301,12 @@ class WordVectorizer:
 			elif vectorizer == 'fasttext':
 				self.model = FastText.load(self.model_path)
 			return self.model
+		
+		# Load the tokenized texts
+		assert os.path.exists(self.tokenized_texts_path), 'Tokenized texts not loaded.'
+		print(f'Loading tokenized texts from {self.tokenized_texts_path}...')
+		with open(self.tokenized_texts_path, 'rb') as f:
+			tokenized_texts = pkl.load(f)
 
 		# Train the word2vec model
 		if vectorizer == 'word2vec':
