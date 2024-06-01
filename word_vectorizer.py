@@ -7,7 +7,7 @@ import nltk
 from nltk.tokenize import word_tokenize
 import spacy
 import warnings
-from typing import Literal
+from typing import Literal, Iterator
 
 nltk.download('punkt')
 
@@ -18,6 +18,8 @@ class WordVectorizer:
 		"""
 		self.dataset_name: str = ''
 		self.size_mb: int|Literal['max'] = 'max'
+		self.total_texts: int = 0
+		self.max_texts_lenght: int = 0
 		self.tokenizer_name: str = ''
 		self.caps: bool = False
 		self.model_name: str = ''
@@ -52,6 +54,8 @@ class WordVectorizer:
 			print(f"Dataset in {self.raw_texts_path} already exists.")
 			with open(self.raw_texts_path, 'rb') as f:
 				raw_texts = pkl.load(f)
+				self.total_texts = len(raw_texts)
+				self.max_texts_lenght = max([len(text) for text in raw_texts])
 			return
 			
 		# Load the dataset if it doesn't exist
@@ -71,6 +75,8 @@ class WordVectorizer:
 		# Save the filtered dataset
 		with open(self.raw_texts_path, 'wb') as f:
 			pkl.dump(raw_texts, f)
+			self.total_texts = len(raw_texts)
+			self.max_texts_lenght = max([len(text) for text in raw_texts])
 
 	def __filter_dataset_size(self, raw_texts: list[str], size_mb: int) -> list[str]:
 		"""
@@ -99,7 +105,7 @@ class WordVectorizer:
 
 		return return_texts
 
-	def tokenize(self, tokenizer: str = 'spacy', caps: bool=False, force_tokenize: bool=False) -> None:
+	def tokenize(self, tokenizer: str = 'spacy', caps: bool=False, batch_size: int|Literal['max']='max', force_tokenize: bool=False) -> None:
 		"""
 		Tokenizes the texts in the dataset.
 
@@ -110,12 +116,15 @@ class WordVectorizer:
 			If spacy is selected, the 'ca_core_news_sm' model is used.
 		caps : bool
 			Whether to keep the uppercase characters in the text.
+		batch_size : int|Literal['max']
+			The number of texts to process per batch. If 'max' is selected, all texts are processed at once.
 		force_tokenize : bool
 			Whether to force the tokenization of the texts even if they are already tokenized.
 
 		Resulting tokenized data is saved to './data' folder.
 		"""
 		assert tokenizer in ['spacy', 'nltk'], 'Tokenizer not available.'
+		assert batch_size > 0 if isinstance(batch_size, int) else batch_size == 'max', 'Batch size must be greater than 0 or "max".'
 
 		file_path = f'./data/{tokenizer}_{self.dataset_name}_{self.size_mb}mb.pkl'
 		caps_file_path = f'./data/{tokenizer}_caps_{self.dataset_name}_{self.size_mb}mb.pkl'
@@ -129,25 +138,32 @@ class WordVectorizer:
 			print(f'Tokenized texts in file {caps_file_path if caps else file_path} already exist.')
 			return
 		
+		count = 0
+		tokenized_texts = []
+		
 		# In case caps is False, we check if the tokenized texts with caps exist and convert them to lowercase
 		if (not force_tokenize) and (not caps) and (os.path.exists(caps_file_path)):
 			print(f'Tokenized texts in file {file_path} not found, but uppercase tokenized texts found in {caps_file_path}. Converting to lowercase.')
-			with open(caps_file_path, 'rb') as f:
-				tokenized_texts = pkl.load(f)
+			for text_batch in self.__batch_iterator(file_path=caps_file_path, batch_size=batch_size if batch_size != 'max' else self.total_texts):
+				batch_tokenized = [[token.lower() for token in text] for text in text_batch]
+				tokenized_texts.extend(batch_tokenized)
+				if batch_size != 'max':
+					count += batch_size
+					print(f'Converted {count}/{self.total_texts} texts to lowercase.', end='\r')
+				else:
+					count += self.total_texts
+					print(f'Converted {count}/{self.total_texts} texts to lowercase.', end='\r')
 
 			# Save lowercase tokenized texts
 			with open(file_path, 'wb') as f:
-				pkl.dump([[token.lower() for token in text] for text in tokenized_texts], f)
+				pkl.dump(tokenized_texts, f)
+			
 			return
-
+		
 		# Tokenize the texts if they don't exist
 		assert os.path.exists(self.raw_texts_path), 'Raw texts not loaded.'
 		with open(self.raw_texts_path, 'rb') as f:
 			raw_texts = pkl.load(f)
-
-		count = 0
-		total_texts = len(raw_texts)
-		tokenized_texts = []
 
 		# Spacy tokenizer
 		if tokenizer == 'spacy':
@@ -161,20 +177,41 @@ class WordVectorizer:
 			nlp = spacy.load('ca_core_news_sm')
 			
 			# We add 1000 to the max_length to avoid problems
-			max_texts_lenght = max([len(text) for text in raw_texts])
-			nlp.max_length = max_texts_lenght + 1000
+			nlp.max_length = self.max_texts_lenght + 1000
 
-			for text in raw_texts:
-				tokenized_texts.append([token.text for token in nlp(text)])
-				count += 1
-				print(f'Tokenized {count+1}/{total_texts} texts with spacy.', end='\r')
+			# Iterate through batches and tokenize
+			for texts_batch in self.__batch_iterator(file_path=self.raw_texts_path, batch_size=batch_size if batch_size != 'max' else self.total_texts):
+				batch_tokenized = [[token.text for token in nlp(text)] for text in texts_batch]
+				tokenized_texts.extend(batch_tokenized)
+				if batch_size != 'max':
+					count += batch_size
+					print(f'Tokenized {count}/{self.total_texts} texts with spacy.', end='\r')
+				else:
+					count += self.total_texts
+					print(f'Tokenized {count}/{self.total_texts} texts with spacy.', end='\r')
+
+			# for text in raw_texts:
+			# 	tokenized_texts.append([token.text for token in nlp(text)])
+			# 	count += 1
+			# 	print(f'Tokenized {count+1}/{self.total_texts} texts with spacy.', end='\r')
 
 		# Nltk tokenizer
 		elif tokenizer == 'nltk':
-			for text in raw_texts:
-				tokenized_texts.append(word_tokenize(text))
-				count += 1
-				print(f'Tokenized {count+1}/{total_texts} texts with nltk.', end='\r')
+			# Iterate through batches and tokenize
+			for texts_batch in self.__batch_iterator(file_path=self.raw_texts_path, batch_size=batch_size if batch_size != 'max' else self.total_texts):
+				batch_tokenized = [word_tokenize(text) for text in texts_batch]
+				tokenized_texts.extend(batch_tokenized)
+				if batch_size != 'max':
+					count += batch_size
+					print(f'Tokenized {count}/{self.total_texts} texts with nltk.', end='\r')
+				else:
+					count += self.total_texts
+					print(f'Tokenized {count}/{self.total_texts} texts with nltk.', end='\r')
+
+			# for text in raw_texts:
+			# 	tokenized_texts.append(word_tokenize(text))
+			# 	count += 1
+			# 	print(f'Tokenized {count+1}/{self.total_texts} texts with nltk.', end='\r')
 
 		# Save uppercase tokenized texts
 		with open(caps_file_path, 'wb') as f:
@@ -183,6 +220,31 @@ class WordVectorizer:
 		# Save lowercase tokenized texts
 		with open(file_path, 'wb') as f:
 			pkl.dump([[token.lower() for token in text] for text in tokenized_texts], f)
+
+	def __batch_iterator(self, file_path: str, batch_size: int = 1000) -> Iterator[list[str]]:
+		"""
+		Generator function that yields batches of texts from the dataset.
+
+		Parameters
+		----------
+		filepath : str
+			Path to the file containing the dataset.
+		batch_size : int
+			Number of texts to process per batch.
+
+		Yields
+		------
+		Iterator[list[str]]
+			Batches of texts.
+		"""
+		try:
+			with open(file_path, 'rb') as file:
+				texts = pkl.load(file)
+				for i in range(0, len(texts), batch_size):
+					yield texts[i:i+batch_size]
+		except FileNotFoundError:
+			print("File not found. Please check the path and try again.")
+			raise
 
 	def train(self, 
 		vectorizer: str='word2vec', 
@@ -246,6 +308,7 @@ class WordVectorizer:
 
 		# Train the word2vec model
 		if vectorizer == 'word2vec':
+			print(f'Training {vectorizer} model with {model_type}...')
 			self.model = Word2Vec(
 				sentences=tokenized_texts, 
 				vector_size=vector_size, 
@@ -256,6 +319,7 @@ class WordVectorizer:
 
 		# Train the fasttext model
 		elif vectorizer == 'fasttext':
+			print(f'Training {vectorizer} model with {model_type}...')
 			self.model = FastText(
 				sentences=tokenized_texts, 
 				vector_size=vector_size,
