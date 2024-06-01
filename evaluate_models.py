@@ -11,6 +11,8 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from itertools import combinations
 
+from functions import calculate_full_dataset_size
+
 ################################################################################
 # Function to evaluate the models
 
@@ -115,7 +117,7 @@ def evaluate_models(save: bool=True) -> pd.DataFrame:
 ################################################################################
 # Functions to generate the plots
 
-FULL_DATA_SIZE_MB = 2561 # Approx. from 2560.948685646057 for data from 'projecte-aina/catalan_general_crawling'
+FULL_DATA_SIZE_MB = int(round(calculate_full_dataset_size(), 0))
 
 def generate_model_barplot(results_df: pd.DataFrame, metric: str, family: str='all') -> None:
 	"""
