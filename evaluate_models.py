@@ -62,8 +62,9 @@ def evaluate_models(save: bool=True) -> pd.DataFrame:
 
 	# Evaluate Word2Vec models
 	for model_path in w2v_path_list:
+		caps = 'caps' in model_path
 		model = Word2Vec.load(model_path)
-		(pearson, p_pearson), (significance, p_significance), oov_ratio = model.wv.evaluate_word_pairs(test_path)
+		(pearson, p_pearson), (significance, p_significance), oov_ratio = model.wv.evaluate_word_pairs(test_path if not caps else caps_test_path)
 		avg_statistic = (pearson + significance) / 2
 		
 		results_dict[model_path] = {
@@ -81,8 +82,9 @@ def evaluate_models(save: bool=True) -> pd.DataFrame:
 
 	# Evaluate FastText models
 	for model_path in ft_path_list:
+		caps = 'caps' in model_path
 		model = FastText.load(model_path)
-		(pearson, p_pearson), (significance, p_significance), oov_ratio = model.wv.evaluate_word_pairs(test_path)
+		(pearson, p_pearson), (significance, p_significance), oov_ratio = model.wv.evaluate_word_pairs(test_path if not caps else caps_test_path)
 		avg_statistic = (pearson + significance) / 2
 
 		results_dict[model_path] = {
