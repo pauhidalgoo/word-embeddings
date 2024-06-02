@@ -118,7 +118,7 @@ def evaluate_models(save: bool=True) -> pd.DataFrame:
 # Functions to generate the plots
 
 # Calculate the size of the full dataset in MB
-print("Calculating the size of the full dataset in MB to adjust the scale of the plots...")
+print("Calculating the size of the full dataset in MB to adjust the scale of the plots...") 
 FULL_DATA_SIZE_MB = int(round(calculate_full_dataset_size(), 0))
 
 def generate_model_barplot(results_df: pd.DataFrame, metric: str, family: str='all') -> None:
@@ -291,9 +291,33 @@ def generate_vectorizer_barplot(results_df: pd.DataFrame, metric: str, compare: 
 ################################################################################
 # Main script
 
+def filter_results(df: pd.DataFrame, neg_keyword: str) -> pd.DataFrame:
+	"""
+	Filter the evaluation results by the negative and positive keywords.
+
+	Parameters
+	----------
+	df : pd.DataFrame
+		The DataFrame with the evaluation results to filter.
+	neg_keyword : str
+		The negative keyword to filter the results by. All models containing this keyword will be removed.
+
+	Returns
+	-------
+	results_filtered_df : pd.DataFrame
+		The filtered DataFrame with the evaluation results.
+	"""
+	df = df.copy()
+	results_filtered_df = df[~df['Model'].str.contains(neg_keyword)].copy()
+
+	return results_filtered_df
+
 if __name__ == '__main__':
 	# Evaluate the models
 	results_df = evaluate_models()
+
+	# results_df = filter_results(results_df, 'win10') # Comment this line if you want to include the 'win10' models
+	results_df = filter_results(results_df, 'cbow') # Comment this line if you want to include the 'cbow' models
 
 	# Empty the 'plots' directory before generating the plots
 	for file in os.listdir('./results/plots/'):
