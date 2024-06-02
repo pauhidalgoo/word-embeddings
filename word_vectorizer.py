@@ -280,6 +280,7 @@ class WordVectorizer:
 		model_type: str='skipgram', 
 		vector_size: int=100,
 		window: int=5,
+		min_count: int=5,
 		workers: int=1,
 		save: bool=True,
 		force_train: bool=False
@@ -297,6 +298,8 @@ class WordVectorizer:
 			The size of the vectors to use.
 		window : int
 			The window size to use in the training process.
+		min_count : int
+			The minimum count of a word to be included in the training process.
 		workers : int
 			The number of workers to use in the training process (CPU threads).
 		save : bool
@@ -309,13 +312,16 @@ class WordVectorizer:
 		assert workers > 0, 'Workers must be greater than 0.'
 		assert vector_size > 0, 'Vector size must be greater than 0.'
 		assert window > 0, 'Window size must be greater than 0.'
+		assert min_count > 0, 'Min count must be greater than 0.'
 
 		self.model_name = vectorizer
 		self.model_type_name = model_type
 		vectorizer_key_name = 'w2v' if vectorizer == 'word2vec' else 'ft'
 		model_type_key_name = 'sg' if model_type in ['skipgram', 'sg'] else 'cbow'
 		caps_key_name = '_caps_' if self.caps else '_'
-		self.model_path = f'./models/{vectorizer}/{vectorizer_key_name}_{model_type_key_name}_{vector_size}_{self.tokenizer_name}{caps_key_name}{self.dataset_name}_{self.size_mb}mb.model'
+		window_key_name = f'_win{window}' if window != 5 else ''
+		min_count_key_name = f'minc{min_count}_' if min_count != 5 else ''
+		self.model_path = f'./models/{vectorizer}/{vectorizer_key_name}_{model_type_key_name}_{vector_size}{window_key_name}_{min_count_key_name}{self.tokenizer_name}{caps_key_name}{self.dataset_name}_{self.size_mb}mb.model'
 
 		# Check if the model already exists
 		if not force_train and os.path.exists(self.model_path):
@@ -340,7 +346,7 @@ class WordVectorizer:
 				vector_size=vector_size, 
 				sg=1 if model_type in ['skipgram', 'sg'] else 0,
 				window=window, 
-				min_count=5, 
+				min_count=min_count, 
 				workers=workers)
 
 		# Train the fasttext model
@@ -351,7 +357,7 @@ class WordVectorizer:
 				vector_size=vector_size,
 				sg=1 if model_type in ['skipgram', 'sg'] else 0,
 				window=window, 
-				min_count=5, 
+				min_count=min_count, 
 				workers=workers)
 
 		if save:
