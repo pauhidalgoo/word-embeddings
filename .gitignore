@@ -4,3 +4,4 @@ models/fasttext/cc.ca.300.bin.gz
 *.bin
 models
 data
+__pycache__
