@@ -104,7 +104,7 @@ def evaluate_models(save: bool=True) -> pd.DataFrame:
 	results_df = pd.DataFrame(results_dict).T
 
 	# Reorder the columns and sort the values by the 'Avg. Statistic' column
-	results_df = results_df[['Model', 'Avg. Statistic', 'Pearson', 'Pearson p-value', 'Significance', 'Significance p-value', 'OOV Ratio']]
+	results_df = results_df[['Model', 'Avg. Statistic', 'Pearson', 'Significance', 'OOV Ratio', 'Pearson p-value', 'Significance p-value']]
 	results_df = results_df.sort_values(by='Avg. Statistic', ascending=False)
 
 	# Save the results to a CSV file
@@ -316,8 +316,8 @@ if __name__ == '__main__':
 	# Evaluate the models
 	results_df = evaluate_models()
 
-	# results_df = filter_results(results_df, 'win10') # Comment this line if you want to include the 'win10' models
-	results_df = filter_results(results_df, 'cbow') # Comment this line if you want to include the 'cbow' models
+	results_df = filter_results(results_df, 'win10') # Comment this line if you want to include the 'win10' models
+	# results_df = filter_results(results_df, 'cbow') # Comment this line if you want to include the 'cbow' models
 
 	# Empty the 'plots' directory before generating the plots
 	for file in os.listdir('./results/plots/'):

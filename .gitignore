@@ -1,5 +1,4 @@
 .venv
-models/fasttext/cc.ca.300.bin.gz
 *.npy
 *.model
 *.bin
