@@ -1,7 +1,10 @@
 .venv
 models/fasttext/cc.ca.300.bin.gz
 *.npy
+*.model
 *.bin
+*.pkl
+__pycache__
+ZZZ_TempCodeRunnerFile.py
 models
 data
-__pycache__
