@@ -15,10 +15,20 @@ from typing import Literal, Iterator, Any
 nltk.download('punkt')
 
 class WordVectorizer:
-	def __init__(self) -> None:
+	def __init__(self, pretrained: bool=False) -> None:
 		"""
 		Initializes the WordVectorizer class.
+
+		Parameters
+		----------
+		pretrained : bool
+			Whether to model will be pretrained or not.
+			If True, the load_data and tokenize methods won't actually load or tokenize the data, 
+			but only set the parameters for the pretrained model to use in the train method.
 		"""
+		assert isinstance(pretrained, bool), 'Pretrained parameter must be a boolean.'
+
+		self.pretrained: bool = pretrained
 		self.dataset_name: str = ''
 		self.size_mb: int|Literal['max'] = 'max'
 		self.total_texts: int = 0
@@ -78,6 +88,10 @@ class WordVectorizer:
 		self.size_mb = size_mb 
 		self.raw_texts_path = f'./data/raw_{dataset}_{size_mb}mb.pkl'
 
+		# Check if the model is pretrained (in which case the data is not loaded)
+		if self.pretrained:
+			return
+
 		# Check if the dataset already exists
 		if os.path.exists(self.raw_texts_path):
 			print(f"Dataset in {self.raw_texts_path} already exists.")
@@ -131,6 +145,8 @@ class WordVectorizer:
 				break
 			return_texts.append(text)
 			current_size += text_size
+		else:
+			print(f"Dataset size is less than the specified {size_mb}MB. Loading full dataset.")
 
 		return return_texts
 
@@ -154,6 +170,7 @@ class WordVectorizer:
 		"""
 		assert tokenizer in ['spacy', 'nltk'], 'Tokenizer not available.'
 		assert batch_size > 0 if isinstance(batch_size, int) else batch_size == 'max', 'Batch size must be greater than 0 or "max".'
+		assert isinstance(caps, bool), 'Caps must be a boolean.'
 
 		file_path = f'./data/{tokenizer}_{self.dataset_name}_{self.size_mb}mb.pkl'
 		caps_file_path = f'./data/{tokenizer}_caps_{self.dataset_name}_{self.size_mb}mb.pkl'
@@ -161,6 +178,10 @@ class WordVectorizer:
 		self.tokenizer_name = tokenizer
 		self.tokenized_texts_path = caps_file_path if caps else file_path
 		self.caps = caps
+
+		# Check if the model is pretrained (in which case the data is not tokenized)
+		if self.pretrained:
+			return
 
 		# Check if the tokenized texts already exist
 		if (not force_tokenize) and (os.path.exists(self.tokenized_texts_path)):
@@ -283,7 +304,7 @@ class WordVectorizer:
 		min_count: int=5,
 		workers: int=1,
 		save: bool=True,
-		force_train: bool=False
+		force_train: bool=False,
 		) -> None:
 		"""
 		Trains the word vectorizer with the dataset.
