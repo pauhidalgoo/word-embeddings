@@ -54,7 +54,7 @@ def evaluate_models(save: bool=True) -> pd.DataFrame:
 			'Pearson p-value': None, 
 			'Spearman': None, 
 			'Spearman p-value': None, 
-			'OOV (%)': None
+			'OOV Perc.': None
 			} for model_path in w2v_path_list + ft_path_list
 	}
 
@@ -74,7 +74,7 @@ def evaluate_models(save: bool=True) -> pd.DataFrame:
 			'Pearson p-value': p_pearson, 
 			'Spearman': spearman, 
 			'Spearman p-value': p_spearman, 
-			'OOV (%)': oov
+			'OOV Perc.': oov
 		}
 
 		counter += 1
@@ -94,7 +94,7 @@ def evaluate_models(save: bool=True) -> pd.DataFrame:
 			'Pearson p-value': p_pearson, 
 			'Spearman': spearman, 
 			'Spearman p-value': p_spearman, 
-			'OOV (%)': oov
+			'OOV Perc.': oov
 		}
 
 		counter += 1
@@ -106,7 +106,7 @@ def evaluate_models(save: bool=True) -> pd.DataFrame:
 	results_df = pd.DataFrame(results_dict).T
 
 	# Reorder the columns and sort the values by the 'Avg. Statistic' column
-	results_df = results_df[['Model', 'Avg. Statistic', 'Pearson', 'Spearman', 'OOV (%)', 'Pearson p-value', 'Spearman p-value']]
+	results_df = results_df[['Model', 'Avg. Statistic', 'Pearson', 'Spearman', 'OOV Perc.', 'Pearson p-value', 'Spearman p-value']]
 	results_df = results_df.sort_values(by='Avg. Statistic', ascending=False)
 
 	# Save the results to a CSV file
@@ -163,11 +163,11 @@ def generate_model_barplot(results_df: pd.DataFrame, metric: str, family: str='a
 	results_df : pd.DataFrame
 		The DataFrame containing the results of the evaluation.
 	metric : str
-		The metric to generate the barplot for. It can be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV (%)'].
+		The metric to generate the barplot for. It can be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV Perc.'].
 	family : str, optional
 		The family of models to generate the barplot for. It can be one of ['all', 'w2v', 'ft']. The default is 'all'.
 	"""
-	assert metric in ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV (%)'], f"Invalid metric '{metric}'. Must be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV (%)']."
+	assert metric in ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV Perc.'], f"Invalid metric '{metric}'. Must be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV Perc.']."
 	assert family in ['all', 'w2v', 'ft'], f"Invalid family '{family}'. Must be one of ['all', 'w2v', 'ft']."
 
 	# Filter the dataframe by the family of models
@@ -178,8 +178,8 @@ def generate_model_barplot(results_df: pd.DataFrame, metric: str, family: str='a
 	else:
 		results_filtered_df = results_df.copy()
 
-	# Sort the values by the metric (descending order, except for 'OOV (%)')
-	results_filtered_df = results_filtered_df.sort_values(by=metric, ascending=(metric == 'OOV (%)'))
+	# Sort the values by the metric (descending order, except for 'OOV Perc.')
+	results_filtered_df = results_filtered_df.sort_values(by=metric, ascending=(metric == 'OOV Perc.'))
 
 	# Remove .model from the model names
 	results_filtered_df['Model'] = results_filtered_df['Model'].apply(lambda x: x.removesuffix('.model'))
@@ -204,11 +204,11 @@ def generate_tokenizer_barplot(results_df: pd.DataFrame, metric: str, family: st
 	results_df : pd.DataFrame
 		The DataFrame containing the results of the evaluation.
 	metric : str
-		The metric to generate the barplot for. It can be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV (%)'].
+		The metric to generate the barplot for. It can be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV Perc.'].
 	family : str
 		The family of models to generate the barplot for. It can be one of ['all', 'w2v', 'ft'].
 	"""
-	assert metric in ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV (%)'], f"Invalid metric '{metric}'. Must be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV (%)']."
+	assert metric in ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV Perc.'], f"Invalid metric '{metric}'. Must be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV Perc.']."
 	assert family in ['all', 'w2v', 'ft'], f"Invalid family '{family}'. Must be one of ['all', 'w2v', 'ft']."
 
 	# Filter the dataframe by the family of models
@@ -245,11 +245,11 @@ def generate_size_plot(results_df: pd.DataFrame, metric: str, family: str) -> No
 	results_df : pd.DataFrame
 		The DataFrame with the evaluation results of the models.
 	metric : str
-		The metric to generate the barplot for. It can be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV (%)'].
+		The metric to generate the barplot for. It can be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV Perc.'].
 	family : str
 		The family of models to generate the barplot for. It can be one of ['all', 'w2v', 'ft'].
 	"""
-	assert metric in ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV (%)'], f"Invalid metric '{metric}'. Must be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV (%)']."
+	assert metric in ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV Perc.'], f"Invalid metric '{metric}'. Must be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV Perc.']."
 	assert family in ['all', 'w2v', 'ft'], f"Invalid family '{family}'. Must be one of ['all', 'w2v', 'ft']."
 
 	# Filter the dataframe by the family of models
@@ -296,11 +296,11 @@ def generate_vectorizer_barplot(results_df: pd.DataFrame, metric: str, compare: 
 	results_df : pd.DataFrame
 		The DataFrame containing the results of the evaluation.
 	metric : str
-		The metric to generate the barplot for. It can be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV (%)'].
+		The metric to generate the barplot for. It can be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV Perc.'].
 	compare : list[str]|tuple[str]
 		The vectorizers to compare. Can be one of ['w2v_sg', 'w2v_cbow', 'ft_sg', 'ft_cbow']. The default is ['w2v', 'ft'].
 	"""
-	assert metric in ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV (%)'], f"Invalid metric '{metric}'. Must be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV (%)']."
+	assert metric in ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV Perc.'], f"Invalid metric '{metric}'. Must be one of ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV Perc.']."
 
 	# Filter the dataframe by the family of models
 	results_filtered_df = results_df[results_df['Model'].str.startswith(compare[0]) | results_df['Model'].str.startswith(compare[1])]
@@ -311,7 +311,7 @@ def generate_vectorizer_barplot(results_df: pd.DataFrame, metric: str, compare: 
 	average_vectorizer_df = results_filtered_df[['Vectorizer', metric]].groupby('Vectorizer').mean().reset_index()
 
 	# Generate the barplot
-	plt.figure(figsize=(10, 6))
+	plt.figure(figsize=(8, 6))
 	sns.barplot(x='Vectorizer', y=metric, data=average_vectorizer_df)
 	plt.xticks(rotation=45, ha='right')
 	plt.xlabel('Vectorizer')
@@ -328,8 +328,8 @@ if __name__ == '__main__':
 	# Evaluate the models
 	results_df = evaluate_models()
 
-	hide_win10 = True
-	hide_caps = True
+	hide_win10 = False
+	hide_caps = False
 	hide_cbow = False
 
 	# Filter the results by the negative keywords
@@ -345,7 +345,7 @@ if __name__ == '__main__':
 		os.remove(os.path.join('./results/plots/', file))
 
 	# Define the metrics and families
-	metrics = ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV (%)']
+	metrics = ['Avg. Statistic', 'Pearson', 'Spearman', 'OOV Perc.']
 	different_vectorizers = results_df['Model'].apply(lambda x: '_'.join(x.split('_')[:2])).unique()
 	available_families = []
 	bool_w2v, bool_ft = False, False
