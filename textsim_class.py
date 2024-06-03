@@ -9,21 +9,27 @@ import tensorflow as tf
 from gensim.models import fasttext
 from sklearn.preprocessing import OneHotEncoder
 from scipy.stats import pearsonr
+import pickle
+from tensorflow_models import *
 
 class TextSimilarity:
-    def __init__(self, model, dataset, remap_embeddings = None, mode = "mean", rob=True, pretrained = False, remap=True, trainable = True):
+    def __init__(self, model, dataset, remap_embeddings = None, mode = "mean", cls=True, pretrained = False, remap=True, trainable = True, dict_size = 15000, recalculate=True):
         self.input_pairs = [(e["sentence1"], e["sentence2"], e["label"], ) for e in dataset["train"].to_list()]
         self.input_pairs_val = [(e["sentence1"], e["sentence2"], e["label"], ) for e in dataset["validation"].to_list()]
         self.input_pairs_test = [(e["sentence1"], e["sentence2"], e["label"], ) for e in dataset["test"].to_list()]
         self.model = model
-        self.create_dict_tfid()
-        self.rob = rob
+        self.create_dict_tfid(dict_size = dict_size)
+        self.cls = cls
         self.pretrained= pretrained
         self.remap_embeddings = remap
         self.trainable = trainable
-        self.mapped_train = self.map_pairs(self.input_pairs, dictionary=self.diccionari, mode = mode)
-        self.mapped_val = self.map_pairs(self.input_pairs_val, dictionary=self.diccionari, mode=mode)
-        self.mapped_test = self.map_pairs(self.input_pairs_test, dictionary=self.diccionari, mode=mode)
+        if recalculate:
+            self.mapped_train = self.map_pairs(self.input_pairs, dictionary=self.diccionari, mode=mode)
+            self.mapped_val = self.map_pairs(self.input_pairs_val, dictionary=self.diccionari, mode=mode)
+            self.mapped_test = self.map_pairs(self.input_pairs_test, dictionary=self.diccionari, mode=mode)
+            self.save_mapped_pairs(mode)
+        else:
+            self.load_mapped_pairs(mode)
         self._pretrained_weights: Optional[np.ndarray] = None
         if self.pretrained:
             self.pretrained_weights()
@@ -32,7 +38,7 @@ class TextSimilarity:
         preprocessed = simple_preprocess(sentence)
         return preprocessed
     
-    def create_dict_tfid(self):
+    def create_dict_tfid(self, dict_size):
         all_input_pairs = self.input_pairs + self.input_pairs_val + self.input_pairs_test
         sentences_1_preproc = [simple_preprocess(sentence_1) for sentence_1, _, _ in all_input_pairs]
         sentences_2_preproc = [simple_preprocess(sentence_2) for _, sentence_2, _ in all_input_pairs]
@@ -40,6 +46,7 @@ class TextSimilarity:
         # Versión aplanada para poder entrenar el modelo
         sentences_pairs_flattened = sentences_1_preproc + sentences_2_preproc
         self.diccionari = Dictionary(sentences_pairs_flattened)
+        #self.diccionari.filter_extremes(keep_n=dict_size)
         corpus = [self.diccionari.doc2bow(sent) for sent in sentences_pairs_flattened]
         self.model_tfidf = TfidfModel(corpus)
 
@@ -86,12 +93,12 @@ class TextSimilarity:
         return np.mean(vector, axis=0)
     
     def _map_spacy(self, sentence):
-        self.model(sentence)
-        return sentence.vector
+        sent = self.model(sentence)
+        return sent.vector
     
-    def _map_roberta(self, sentence, cls=True):
+    def _map_roberta(self, sentence):
         doc = self.model(sentence)
-        if cls:
+        if self.cls:
             return doc._.trf_data.last_hidden_layer_state.data[-1]
         else:
             return np.mean(doc._.trf_data.last_hidden_layer_state.data[:-1], axis=0)
@@ -126,8 +133,8 @@ class TextSimilarity:
                 vector1 = self._map_mean(sentence_1_preproc)
                 vector2 = self._map_mean(sentence_2_preproc)
             elif mode == "embeddings":
-                vector1 = self._map_word_embeddings(sentence_1, sequence_len, fixed_dictionary)
-                vector2 = self._map_word_embeddings(sentence_2, sequence_len, fixed_dictionary)
+                vector1 = self._map_word_embeddings(sentence_1, sequence_len, self.diccionari)
+                vector2 = self._map_word_embeddings(sentence_2, sequence_len,  self.diccionari)
             elif mode == "onehot":
                 vector1 = self._map_one_hot(sentence_1_preproc)
                 vector2 = self._map_one_hot(sentence_2_preproc)
@@ -135,8 +142,8 @@ class TextSimilarity:
                 vector1 = self._map_spacy(sentence_1)
                 vector2 = self._map_spacy(sentence_2)
             elif mode == "roberta":
-                vector1 = self._map_roberta(sentence_1, self.rob)
-                vector2 = self._map_roberta(sentence_2, self.rob)
+                vector1 = self._map_roberta(sentence_1)
+                vector2 = self._map_roberta(sentence_2)
             else:
                 print("wrong mode")
             pares_vectores.append(((vector1, vector2), similitud))
@@ -164,7 +171,7 @@ class TextSimilarity:
                 self._pretrained_weights[1:, :] = self.model.vectors
             
 
-    def define_model(self):
+    def define_model(self, id = 0):
         self.x_train, self.y_train = self.pair_list_to_x_y(self.mapped_train)
         self.x_val, self.y_val = self.pair_list_to_x_y(self.mapped_val)
         self.x_test, self.y_test = self.pair_list_to_x_y(self.mapped_test)
@@ -177,80 +184,56 @@ class TextSimilarity:
         self.val_dataset = val_dataset.batch(batch_size)
 
         if self.mode != "embeddings":
-            self.exec_model = self.build_and_compile_model( embedding_size= self.x_train[0].shape[1])
+            if id == 0:
+                self.exec_model = model_1()
+            elif id == 1:
+                self.exec_model = model_2(embedding_size= self.x_train[0].shape[1])
+            elif id == 2:
+                self.exec_model = model_3(embedding_size= self.x_train[0].shape[1])
+            elif id == 3:
+                self.exec_model = model_4()
+            elif id == 4:
+                self.exec_model = model_5(embedding_size= self.x_train[0].shape[1])
+            else:
+                self.exec_model = model_6(embedding_size= self.x_train[0].shape[1])
             #tf.keras.utils.plot_model(model, show_shapes=True, show_layer_activations=True, )
             
         else:
-            self.exec_model = self.build_and_compile_trainable_model(self.sequence_len, pretrained_weights=self._pretrained_weights, trainable=self.trainable)
+            if id == 0:
+                self.exec_model = model_embeddings_1(self.sequence_len, dictionary_size= len(self.diccionari) +1, pretrained_weights=self._pretrained_weights, trainable=self.trainable, use_cosine=False)
+            elif id == 1:
+                self.exec_model = model_embeddings_1(self.sequence_len, dictionary_size= len(self.diccionari) +1,pretrained_weights=self._pretrained_weights, trainable=self.trainable, use_cosine=True)
+            elif id == 2:
+                self.exec_model = model_embeddings_2(self.sequence_len,dictionary_size= len(self.diccionari) +1, pretrained_weights=self._pretrained_weights, trainable=self.trainable, use_cosine=False)
+            elif id == 3:
+                self.exec_model = model_embeddings_2(self.sequence_len,dictionary_size= len(self.diccionari) +1, pretrained_weights=self._pretrained_weights, trainable=self.trainable, use_cosine=True)
+            elif id == 4:
+                self.exec_model = model_embeddings_3(self.sequence_len, dictionary_size= len(self.diccionari) +1,pretrained_weights=self._pretrained_weights, trainable=self.trainable, use_cosine=False)
+            else:
+                self.exec_model = model_embeddings_3(self.sequence_len,dictionary_size= len(self.diccionari) +1, pretrained_weights=self._pretrained_weights, trainable=self.trainable, use_cosine=True)
+
         print(self.exec_model.summary())
 
 
-    def build_and_compile_model(self, embedding_size: int = 300, learning_rate: float = 1e-3) -> tf.keras.Model:
-        # Capa de entrada para los pares de vectores
-        input_1 = tf.keras.Input(shape=(embedding_size,))
-        input_2 = tf.keras.Input(shape=(embedding_size,))
-
-        # Hidden layer
-        first_projection = tf.keras.layers.Dense(
-            embedding_size,
-            kernel_initializer=tf.keras.initializers.Identity(),
-            bias_initializer=tf.keras.initializers.Zeros(),
-        )
-        projected_1 = first_projection(input_1)
-        projected_2 = first_projection(input_2)
-        
-        # Compute the cosine distance using a Lambda layer
-        def cosine_distance(x):
-            x1, x2 = x
-            x1_normalized = tf.keras.backend.l2_normalize(x1, axis=1)
-            x2_normalized = tf.keras.backend.l2_normalize(x2, axis=1)
-            return 2.5 * (1.0 + tf.reduce_sum(x1_normalized * x2_normalized, axis=1))
-
-        output = tf.keras.layers.Lambda(cosine_distance)([projected_1, projected_2])
-        # Define output
-        model = tf.keras.Model(inputs=[input_1, input_2], outputs=output)
-
-        # Compile the model
-        model.compile(loss='mean_squared_error',
-                    optimizer=tf.keras.optimizers.Adamax(learning_rate))
-        return model
-    
-    def build_and_compile_trainable_model(self, input_length, dictionary_size = 1000, embedding_size = 300, pretrained_weights=None, learning_rate=1e-3, trainable=True):
-        input_1 = tf.keras.Input(shape=(input_length,), dtype=tf.int32)
-        input_2 = tf.keras.Input(shape=(input_length,), dtype=tf.int32)
-
-        if pretrained_weights is None:
-            embedding = tf.keras.layers.Embedding(dictionary_size, embedding_size, input_length=input_length, mask_zero=True)
-        else:
-            dictionary_size = pretrained_weights.shape[0]
-            embedding_size = pretrained_weights.shape[1]
-            initializer = tf.keras.initializers.Constant(pretrained_weights)
-            embedding = tf.keras.layers.Embedding(dictionary_size, embedding_size, input_length=input_length, mask_zero=True, embeddings_initializer=initializer, trainable=trainable)
-
-        embedded_1 = embedding(input_1)
-        embedded_2 = embedding(input_2)
-
-        pooled_1 = tf.keras.layers.GlobalAveragePooling1D()(embedded_1)
-        pooled_2 = tf.keras.layers.GlobalAveragePooling1D()(embedded_2)
-
-        def cosine_distance(x):
-            x1, x2 = x
-            x1_normalized = tf.keras.backend.l2_normalize(x1, axis=1)
-            x2_normalized = tf.keras.backend.l2_normalize(x2, axis=1)
-            return 2.5 * (1.0 + tf.reduce_sum(x1_normalized * x2_normalized, axis=1))
-
-        output = tf.keras.layers.Lambda(cosine_distance)([pooled_1, pooled_2])
-        model = tf.keras.Model(inputs=[input_1, input_2], outputs=output)
-        model.compile(loss='mean_squared_error', optimizer=tf.keras.optimizers.Adam(learning_rate))
-        return model
-    # Define model 1
-
-
-    def train(self, num_epochs=64):
+    def train(self, num_epochs=128):
         self.exec_model.fit(self.train_dataset, epochs=num_epochs, validation_data=self.val_dataset)
-        print(f"Correlación de Pearson (baseline-train): {self.compute_pearson(self.x_train, self.y_train)}")
-        print(f"Correlación de Pearson (baseline-validation): {self.compute_pearson(self.x_val, self.y_val)}")
-        print(f"Correlación de Pearson (baseline-test): {self.compute_pearson(self.x_test, self.y_test)}")
+        train_pearson = self.compute_pearson(self.x_train, self.y_train)
+        val_pearson = self.compute_pearson(self.x_val, self.y_val)
+        test_pearson = self.compute_pearson(self.x_test, self.y_test)
+        print(f"Correlación de Pearson (train): {train_pearson}")
+        print(f"Correlación de Pearson (validation): {val_pearson}")
+        print(f"Correlación de Pearson (test): {test_pearson}")
+        return train_pearson, val_pearson, test_pearson
+
+
+    def baseline_model(self):
+        train_pearson = self.compute_pearson_baseline(self.x_train, self.y_train)
+        val_pearson = self.compute_pearson_baseline(self.x_val, self.y_val)
+        test_pearson = self.compute_pearson_baseline(self.x_test, self.y_test)
+        print(f"Correlación de Pearson (baseline-train): {train_pearson}")
+        print(f"Correlación de Pearson (baseline-validation): {val_pearson}")
+        print(f"Correlación de Pearson (baseline-test): {test_pearson}")
+        return train_pearson, val_pearson, test_pearson
 
     def compute_pearson_baseline(self, x_, y_):
         y_pred_baseline = []
@@ -268,3 +251,11 @@ class TextSimilarity:
         # Calcular la correlación de Pearson entre las predicciones y los datos de prueba
         correlation, _ = pearsonr(y_pred.flatten(), y_.flatten())
         return correlation
+    
+    def save_mapped_pairs(self, mode):
+        with open(f'./data/{mode}_mapped_pairs.pkl', 'wb') as f:
+            pickle.dump((self.mapped_train, self.mapped_val, self.mapped_test), f)
+
+    def load_mapped_pairs(self, mode):
+        with open(f'./data/{mode}_mapped_pairs.pkl', 'rb') as f:
+            self.mapped_train, self.mapped_val, self.mapped_test = pickle.load(f)
