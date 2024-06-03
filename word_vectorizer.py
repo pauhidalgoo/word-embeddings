@@ -145,6 +145,8 @@ class WordVectorizer:
 				break
 			return_texts.append(text)
 			current_size += text_size
+		else:
+			print(f"Dataset size is less than the specified {size_mb}MB. Loading full dataset.")
 
 		return return_texts
 
