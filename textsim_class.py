@@ -22,16 +22,17 @@ class TextSimilarity:
         self.cls = cls
         self.pretrained= pretrained
         self.remap_embeddings = remap
+        self.mode = mode
         self.trainable = trainable
-        if recalculate:
+        if recalculate == True:
             self.mapped_train = self.map_pairs(self.input_pairs, dictionary=self.diccionari, mode=mode)
             self.mapped_val = self.map_pairs(self.input_pairs_val, dictionary=self.diccionari, mode=mode)
             self.mapped_test = self.map_pairs(self.input_pairs_test, dictionary=self.diccionari, mode=mode)
             self.save_mapped_pairs(mode)
         else:
-            self.load_mapped_pairs(mode)
+            self.load_mapped_pairs(mode, recalculate)
         self._pretrained_weights: Optional[np.ndarray] = None
-        if self.pretrained:
+        if self.pretrained and mode == "embeddings":
             self.pretrained_weights()
 
     def __simple_preprocess(self, sentence:str) -> List[str]:
@@ -212,7 +213,7 @@ class TextSimilarity:
             else:
                 self.exec_model = model_embeddings_3(self.sequence_len,dictionary_size= len(self.diccionari) +1, pretrained_weights=self._pretrained_weights, trainable=self.trainable, use_cosine=True)
 
-        print(self.exec_model.summary())
+        #print(self.exec_model.summary())
 
 
     def train(self, num_epochs=128):
@@ -220,9 +221,9 @@ class TextSimilarity:
         train_pearson = self.compute_pearson(self.x_train, self.y_train)
         val_pearson = self.compute_pearson(self.x_val, self.y_val)
         test_pearson = self.compute_pearson(self.x_test, self.y_test)
-        print(f"Correlación de Pearson (train): {train_pearson}")
-        print(f"Correlación de Pearson (validation): {val_pearson}")
-        print(f"Correlación de Pearson (test): {test_pearson}")
+        #print(f"Correlación de Pearson (train): {train_pearson}")
+        #print(f"Correlación de Pearson (validation): {val_pearson}")
+        #print(f"Correlación de Pearson (test): {test_pearson}")
         return train_pearson, val_pearson, test_pearson
 
 
@@ -230,9 +231,9 @@ class TextSimilarity:
         train_pearson = self.compute_pearson_baseline(self.x_train, self.y_train)
         val_pearson = self.compute_pearson_baseline(self.x_val, self.y_val)
         test_pearson = self.compute_pearson_baseline(self.x_test, self.y_test)
-        print(f"Correlación de Pearson (baseline-train): {train_pearson}")
-        print(f"Correlación de Pearson (baseline-validation): {val_pearson}")
-        print(f"Correlación de Pearson (baseline-test): {test_pearson}")
+        #print(f"Correlación de Pearson (baseline-train): {train_pearson}")
+        #print(f"Correlación de Pearson (baseline-validation): {val_pearson}")
+        #print(f"Correlación de Pearson (baseline-test): {test_pearson}")
         return train_pearson, val_pearson, test_pearson
 
     def compute_pearson_baseline(self, x_, y_):
@@ -256,6 +257,6 @@ class TextSimilarity:
         with open(f'./data/{mode}_mapped_pairs.pkl', 'wb') as f:
             pickle.dump((self.mapped_train, self.mapped_val, self.mapped_test), f)
 
-    def load_mapped_pairs(self, mode):
-        with open(f'./data/{mode}_mapped_pairs.pkl', 'rb') as f:
+    def load_mapped_pairs(self, mode, recalculate):
+        with open(f'./data/{recalculate}.pkl', 'rb') as f:
             self.mapped_train, self.mapped_val, self.mapped_test = pickle.load(f)
