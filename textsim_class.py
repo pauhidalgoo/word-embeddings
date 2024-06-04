@@ -11,6 +11,7 @@ from sklearn.preprocessing import OneHotEncoder
 from scipy.stats import pearsonr
 import pickle
 from tensorflow_models import *
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
 class TextSimilarity:
     def __init__(self, model, dataset, remap_embeddings = None, mode = "mean", cls=True, pretrained = False, remap=True, trainable = True, dict_size = 15000, recalculate=True):
@@ -217,7 +218,21 @@ class TextSimilarity:
 
 
     def train(self, num_epochs=128):
-        self.exec_model.fit(self.train_dataset, epochs=num_epochs, validation_data=self.val_dataset)
+        early_stopping = EarlyStopping(
+            monitor='val_loss',  # metric to monitor
+            patience=10,         # number of epochs with no improvement after which training will be stopped
+            verbose=1,           # verbosity mode
+            restore_best_weights=True  # whether to restore model weights from the epoch with the best value of the monitored quantity
+        )
+
+        reduce_lr = ReduceLROnPlateau(
+            monitor='val_loss',  # metric to monitor
+            factor=0.1,          # factor by which the learning rate will be reduced
+            patience=5,          # number of epochs with no improvement after which learning rate will be reduced
+            verbose=1,           # verbosity mode
+            min_lr=1e-6          # lower bound on the learning rate
+        )
+        self.exec_model.fit(self.train_dataset, epochs=num_epochs, validation_data=self.val_dataset, callbacks=[early_stopping, reduce_lr])
         train_pearson = self.compute_pearson(self.x_train, self.y_train)
         val_pearson = self.compute_pearson(self.x_val, self.y_val)
         test_pearson = self.compute_pearson(self.x_test, self.y_test)
