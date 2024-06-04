@@ -6,4 +6,6 @@
 __pycache__
 ZZZ_TempCodeRunnerFile.py
 models
-data
+data/*
+!data/roberta_mean_mapped_pairs.pkl
+!data/roberta_mapped_pairs.pkl
