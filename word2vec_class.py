@@ -77,6 +77,6 @@ class TrainWord2Vec:
         self.model = word2vec.Word2Vec.load(f"./models/{name}.model")
         
     def evaluate_model(self):
-        results = self.model.wv.evaluate_word_pairs('wordsim353.en.ca.txt')
+        results = self.model.wv.evaluate_word_pairs('./data/wordsim353.en.ca.txt')
         print(results)
         return results
