@@ -291,7 +291,7 @@ def model_6(embedding_size: int = 300, learning_rate: float = 1e-3) -> tf.keras.
 def model_embeddings_1(
     input_length: int = MAX_LEN,
     dictionary_size: int = 1000,
-    embedding_size: int = 16,
+    embedding_size: int = 100,
     pretrained_weights: Optional[np.ndarray] = None,
     learning_rate: float = 1e-3,
     trainable: bool = False,
@@ -371,7 +371,7 @@ def model_embeddings_1(
 def model_embeddings_2(
     input_length: int = MAX_LEN,
     dictionary_size: int = 1000,
-    embedding_size: int = 16,
+    embedding_size: int = 100,
     learning_rate: float = 1e-3,
     pretrained_weights: Optional[np.ndarray] = None,
     trainable: bool = False,
@@ -467,7 +467,7 @@ def model_embeddings_2(
 def model_embeddings_3(
     input_length: int = MAX_LEN,
     dictionary_size: int = 1000,
-    embedding_size: int = 16,
+    embedding_size: int = 100,
     pretrained_weights: Optional[np.ndarray] = None,
     learning_rate: float = 1e-3,
     trainable: bool = False,

@@ -12,9 +12,10 @@ from scipy.stats import pearsonr
 import pickle
 from tensorflow_models import *
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+import torch
 
 class TextSimilarity:
-    def __init__(self, model, dataset, remap_embeddings = None, mode = "mean", cls=True, pretrained = False, remap=True, trainable = True, dict_size = 15000, recalculate=True):
+    def __init__(self, model, dataset, remap_embeddings = None, mode = "mean", cls=True, pretrained = False, remap=True, trainable = True, dict_size = 15000, tokenizer = None, recalculate=True):
         self.input_pairs = [(e["sentence1"], e["sentence2"], e["label"], ) for e in dataset["train"].to_list()]
         self.input_pairs_val = [(e["sentence1"], e["sentence2"], e["label"], ) for e in dataset["validation"].to_list()]
         self.input_pairs_test = [(e["sentence1"], e["sentence2"], e["label"], ) for e in dataset["test"].to_list()]
@@ -25,6 +26,7 @@ class TextSimilarity:
         self.remap_embeddings = remap
         self.mode = mode
         self.trainable = trainable
+        self.tokenizer = tokenizer
         if recalculate == True:
             self.mapped_train = self.map_pairs(self.input_pairs, dictionary=self.diccionari, mode=mode)
             self.mapped_val = self.map_pairs(self.input_pairs_val, dictionary=self.diccionari, mode=mode)
@@ -98,6 +100,13 @@ class TextSimilarity:
         sent = self.model(sentence)
         return sent.vector
     
+    def _map_roberta_v2(self, sentence):
+        doc = self.model(sentence)
+        if self.cls:
+            return doc._.trf_data.last_hidden_layer_state.data[0]
+        else:
+            return np.mean(doc._.trf_data.last_hidden_layer_state.data[1:], axis=0)
+        
     def _map_roberta(self, sentence):
         doc = self.model(sentence)
         if self.cls:
@@ -105,9 +114,19 @@ class TextSimilarity:
         else:
             return np.mean(doc._.trf_data.last_hidden_layer_state.data[:-1], axis=0)
         
+    def _map_roberta_hugging(self, sentence):
+        sentence = self.tokenizer(sentence, return_tensors="pt", padding=True, truncation=True)
+        with torch.no_grad():
+            outputs = self.model(**sentence)
+        if self.cls:
+            return outputs.last_hidden_state[:, 0, :].squeeze().numpy()
+        else:
+            return  outputs.last_hidden_state.mean(dim=1).squeeze().numpy()
+
+        
     def _map_one_hot(self, sentence):
         new_dict = self.diccionari
-        new_dict.filter_extremes(no_below=20)
+        new_dict.filter_extremes(no_below=10)
         vector = np.zeros(len(new_dict), dtype = np.float32)
         for word_index, _ in new_dict.doc2bow(sentence):
             vector[word_index] = 1
@@ -146,6 +165,12 @@ class TextSimilarity:
             elif mode == "roberta":
                 vector1 = self._map_roberta(sentence_1)
                 vector2 = self._map_roberta(sentence_2)
+            elif mode == "roberta2":
+                vector1 = self._map_roberta_v2(sentence_1)
+                vector2 = self._map_roberta_v2(sentence_2)
+            elif mode == "roberta-hugging":
+                vector1 = self._map_roberta_hugging(sentence_1)
+                vector2 = self._map_roberta_hugging(sentence_2)
             else:
                 print("wrong mode")
             pares_vectores.append(((vector1, vector2), similitud))
@@ -220,7 +245,7 @@ class TextSimilarity:
     def train(self, num_epochs=128):
         early_stopping = EarlyStopping(
             monitor='val_loss',  # metric to monitor
-            patience=10,         # number of epochs with no improvement after which training will be stopped
+            patience=15,         # number of epochs with no improvement after which training will be stopped
             verbose=1,           # verbosity mode
             restore_best_weights=True  # whether to restore model weights from the epoch with the best value of the monitored quantity
         )
@@ -232,7 +257,7 @@ class TextSimilarity:
             verbose=1,           # verbosity mode
             min_lr=1e-6          # lower bound on the learning rate
         )
-        self.exec_model.fit(self.train_dataset, epochs=num_epochs, validation_data=self.val_dataset, callbacks=[early_stopping, reduce_lr])
+        self.exec_model.fit(self.train_dataset, epochs=num_epochs, validation_data=self.val_dataset, callbacks=[early_stopping, reduce_lr],  verbose=0)
         train_pearson = self.compute_pearson(self.x_train, self.y_train)
         val_pearson = self.compute_pearson(self.x_val, self.y_val)
         test_pearson = self.compute_pearson(self.x_test, self.y_test)
