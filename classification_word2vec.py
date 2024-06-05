@@ -17,6 +17,8 @@ from tensorflow.keras.optimizers import Adamax, Adam
 from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.utils import to_categorical
 
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+
 import warnings
 from typing import Callable
 
@@ -393,26 +395,13 @@ class ClassificationWord2Vec:
 		plt.tight_layout()
 		plt.show()
 
-	def predict_sentence(self, sentence: str):
-		"""
-		Predict the label of a sentence.
+		# Print the values of the epoch with the best validation loss
+		best_epoch = np.argmin(history.history['val_loss'])
+		print(f"Train loss: {history.history['loss'][best_epoch]}")
+		print(f"Validation loss: {history.history['val_loss'][best_epoch]}")
+		print(f"Train accuracy: {history.history['accuracy'][best_epoch]}")
+		print(f"Validation accuracy: {history.history['val_accuracy'][best_epoch]}")
 
-		Parameters
-		----------
-		sentence: str
-			Sentence to predict.
-
-		Returns
-		-------
-		str
-			Predicted label.
-		"""
-		assert self.model is not None, "Model not defined. Please, build and train the model before predicting."
-		assert self.trained, "Model not trained. Please, train the model before predicting."
-
-		sentence = self.__preprocess_sentences([sentence])[0]
-
-		return self.model.predict(sentence)
 
 	def evaluate_model(self) -> list:
 		"""
@@ -432,3 +421,29 @@ class ClassificationWord2Vec:
 		print(f"Test accuracy: {result[1]}")
 
 		return result
+	
+	def plot_confusion_matrix(self) -> None:
+			"""
+			Plot the confusion matrix of the test set.
+
+			Returns
+			-------
+			None
+			"""
+			assert self.model is not None, "Model not defined. Please, build and train the model before evaluating it."
+			assert self.trained, "Model not trained. Please, train the model before evaluating."
+
+			y_pred = self.model.predict(self.X_test)
+			y_pred_classes = np.argmax(y_pred, axis=1)
+			y_true_classes = np.argmax(self.y_test, axis=1)
+
+			cm = confusion_matrix(y_true_classes, y_pred_classes)
+			disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=np.arange(self.num_classes))
+
+			if self.num_classes <= 10:
+				fig, ax = plt.subplots(figsize=(10, 10))
+			else:
+				fig, ax = plt.subplots(figsize=(20, 20))
+			disp.plot(ax=ax, cmap='Blues')
+			plt.title('Confusion Matrix')
+			plt.show()
