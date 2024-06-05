@@ -1,3 +1,7 @@
+<!--- BADGES: START --->
+[![HF Models](https://img.shields.io/badge/%F0%9F%A4%97-models-yellow)](https://huggingface.co/models?library=sentence-transformers)
+<!--- BADGES: END --->
+
 # Word Embeddings
 
 > This repo contains the work done in the Practica 4 of the PLH (NLP) course of the Artificial Intelligence Degree at UPC
