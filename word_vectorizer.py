@@ -420,20 +420,24 @@ class WordVectorizer:
 		tsne = TSNE(n_components=2, random_state=42, max_iter=n_iter, perplexity=perplexity)
 		word_vectors_2d = tsne.fit_transform(word_vectors)
 
+		full_model_name = os.path.basename(self.model_path)
+		full_model_name = full_model_name.split('.')[0]
+
 		# Plot the results
-		plt.figure(figsize=(12, 12))
+		plt.figure(figsize=(15, 15))
 		sns.set_context('notebook', font_scale=1.2)
 		sns.scatterplot(
 			x=word_vectors_2d[:,0], 
 			y=word_vectors_2d[:,1], 
 			hue=word_labels, 
 			legend=False)
+		plt.title(f't-SNE projection of {num_words} words (perplexity={perplexity})\nModel: {full_model_name}')
+		plt.tight_layout()
+
 		for i, word in enumerate(word_labels):
 			plt.annotate(word, (word_vectors_2d[i,0], word_vectors_2d[i,1]))
 
 		if save:
-			full_model_name = os.path.basename(self.model_path)
-			full_model_name = full_model_name.split('.')[0]
 			plt.savefig(f'./results/plots/tsne_{full_model_name}.png')
 
 		
