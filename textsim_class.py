@@ -13,7 +13,7 @@ import pickle
 from tensorflow_models import *
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import torch
-
+from scipy.stats import spearmanr
 
 import warnings
 
@@ -280,7 +280,12 @@ class TextSimilarity:
         #print(f"Correlación de Pearson (train): {train_pearson}")
         #print(f"Correlación de Pearson (validation): {val_pearson}")
         #print(f"Correlación de Pearson (test): {test_pearson}")
-        return train_pearson, val_pearson, test_pearson
+
+        train_spearman = self.compute_spearman(self.x_train, self.y_train)
+        val_spearman = self.compute_spearman(self.x_val, self.y_val)
+        test_spearman = self.compute_spearman(self.x_test, self.y_test)
+
+        return train_pearson, val_pearson, test_pearson, train_spearman, val_spearman, test_spearman
 
 
     def baseline_model(self):
@@ -290,7 +295,12 @@ class TextSimilarity:
         #print(f"Correlación de Pearson (baseline-train): {train_pearson}")
         #print(f"Correlación de Pearson (baseline-validation): {val_pearson}")
         #print(f"Correlación de Pearson (baseline-test): {test_pearson}")
-        return train_pearson, val_pearson, test_pearson
+
+        train_spearman= self.compute_spearman_baseline(self.x_train, self.y_train)
+        val_spearman = self.compute_spearman_baseline(self.x_val, self.y_val)
+        test_spearman = self.compute_spearman_baseline(self.x_test, self.y_test)
+
+        return train_pearson, val_pearson, test_pearson, train_spearman, val_spearman, test_spearman
 
     def compute_pearson_baseline(self, x_, y_):
         y_pred_baseline = []
@@ -309,6 +319,22 @@ class TextSimilarity:
         correlation, _ = pearsonr(y_pred.flatten(), y_.flatten())
         return correlation
     
+    def compute_spearman_baseline(self, x_, y_):
+        y_pred_baseline = []
+        for v1, v2 in zip(*x_):
+            d = 1.0 - spatial.distance.cosine(v1, v2)
+            y_pred_baseline.append(d)
+        # Calcular la correlación de Pearson entre las predicciones y los datos de prueba
+        correlation, _ = spearmanr(y_pred_baseline, y_.flatten())
+        return correlation
+    
+    def compute_spearman(self, x_, y_):
+        # Obtener las predicciones del modelo para los datos de prueba. En este ejemplo vamos a utilizar el corpus de training.
+        y_pred = self.exec_model.predict(x_, verbose=0)
+        # Calcular la correlación de Spearman entre las predicciones y los datos de prueba
+        correlation, _ = spearmanr(y_pred.flatten(), y_.flatten())
+        return correlation
+
     def save_mapped_pairs(self, mode):
         with open(f'./data/{mode}_mapped_pairs.pkl', 'wb') as f:
             pickle.dump((self.mapped_train, self.mapped_val, self.mapped_test), f)
