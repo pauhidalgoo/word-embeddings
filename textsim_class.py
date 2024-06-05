@@ -14,6 +14,14 @@ from tensorflow_models import *
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 import torch
 
+
+import warnings
+
+warnings.filterwarnings('ignore', category=FutureWarning)  # Suppress FutureWarnings
+warnings.filterwarnings('ignore', category=UserWarning)    # Suppress UserWarnings
+warnings.filterwarnings('ignore')
+
+
 class TextSimilarity:
     def __init__(self, model, dataset, remap_embeddings = None, mode = "mean", cls=True, pretrained = False, remap=True, trainable = True, dict_size = 15000, tokenizer = None, recalculate=True):
         self.input_pairs = [(e["sentence1"], e["sentence2"], e["label"], ) for e in dataset["train"].to_list()]
@@ -115,7 +123,7 @@ class TextSimilarity:
             return np.mean(doc._.trf_data.last_hidden_layer_state.data[:-1], axis=0)
         
     def _map_roberta_hugging(self, sentence):
-        sentence = self.tokenizer(sentence, return_tensors="pt", padding=True, truncation=True)
+        sentence = self.tokenizer(sentence, return_tensors="pt")
         with torch.no_grad():
             outputs = self.model(**sentence)
         if self.cls:
@@ -126,7 +134,7 @@ class TextSimilarity:
         
     def _map_one_hot(self, sentence):
         new_dict = self.diccionari
-        new_dict.filter_extremes(no_below=10)
+        new_dict.filter_extremes(no_below=5, no_above=1, keep_n=1000)
         vector = np.zeros(len(new_dict), dtype = np.float32)
         for word_index, _ in new_dict.doc2bow(sentence):
             vector[word_index] = 1
@@ -221,8 +229,12 @@ class TextSimilarity:
                 self.exec_model = model_4()
             elif id == 4:
                 self.exec_model = model_5(embedding_size= self.x_train[0].shape[1])
-            else:
+            elif id == 5:
                 self.exec_model = model_6(embedding_size= self.x_train[0].shape[1])
+            elif id == 6:
+                self.exec_model = model_7()
+            else:
+                self.exec_model = model_8(embedding_size= self.x_train[0].shape[1])
             #tf.keras.utils.plot_model(model, show_shapes=True, show_layer_activations=True, )
             
         else:
@@ -236,26 +248,30 @@ class TextSimilarity:
                 self.exec_model = model_embeddings_2(self.sequence_len,dictionary_size= len(self.diccionari) +1, pretrained_weights=self._pretrained_weights, trainable=self.trainable, use_cosine=True)
             elif id == 4:
                 self.exec_model = model_embeddings_3(self.sequence_len, dictionary_size= len(self.diccionari) +1,pretrained_weights=self._pretrained_weights, trainable=self.trainable, use_cosine=False)
-            else:
+            elif id == 5:
                 self.exec_model = model_embeddings_3(self.sequence_len,dictionary_size= len(self.diccionari) +1, pretrained_weights=self._pretrained_weights, trainable=self.trainable, use_cosine=True)
+            elif id == 6:
+                self.exec_model = model_embeddings_7(self.sequence_len,dictionary_size= len(self.diccionari) +1, pretrained_weights=self._pretrained_weights, trainable=self.trainable)
+            else:
+                self.exec_model = model_embeddings_8(self.sequence_len,dictionary_size= len(self.diccionari) +1, pretrained_weights=self._pretrained_weights, trainable=self.trainable)
 
         #print(self.exec_model.summary())
 
 
-    def train(self, num_epochs=128):
+    def train(self, num_epochs=256):
         early_stopping = EarlyStopping(
-            monitor='val_loss',  # metric to monitor
-            patience=15,         # number of epochs with no improvement after which training will be stopped
-            verbose=1,           # verbosity mode
-            restore_best_weights=True  # whether to restore model weights from the epoch with the best value of the monitored quantity
+            monitor='val_loss', 
+            patience=25,        
+            verbose=0,      
+            restore_best_weights=True  
         )
 
         reduce_lr = ReduceLROnPlateau(
-            monitor='val_loss',  # metric to monitor
-            factor=0.1,          # factor by which the learning rate will be reduced
-            patience=5,          # number of epochs with no improvement after which learning rate will be reduced
-            verbose=1,           # verbosity mode
-            min_lr=1e-6          # lower bound on the learning rate
+            monitor='val_loss',  
+            factor=0.1,         
+            patience=10,         
+            verbose=0,        
+            min_lr=1e-7     
         )
         self.exec_model.fit(self.train_dataset, epochs=num_epochs, validation_data=self.val_dataset, callbacks=[early_stopping, reduce_lr],  verbose=0)
         train_pearson = self.compute_pearson(self.x_train, self.y_train)
@@ -288,7 +304,7 @@ class TextSimilarity:
 
     def compute_pearson(self, x_, y_):
         # Obtener las predicciones del modelo para los datos de prueba. En este ejemplo vamos a utilizar el corpus de training.
-        y_pred = self.exec_model.predict(x_)
+        y_pred = self.exec_model.predict(x_, verbose=0)
         # Calcular la correlación de Pearson entre las predicciones y los datos de prueba
         correlation, _ = pearsonr(y_pred.flatten(), y_.flatten())
         return correlation
