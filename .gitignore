@@ -9,3 +9,11 @@ models
 data/*
 !data/roberta_mean_mapped_pairs.pkl
 !data/roberta_mapped_pairs.pkl
+!data/x_val_tecla_nltk.pkl
+!data/x_test_tecla_nltk.pkl
+!data/y_train_tecla_nltk_label1.pkl
+!data/y_val_tecla_nltk_label1.pkl
+!data/y_test_tecla_nltk_label1.pkl
+!data/y_train_tecla_nltk_label2.pkl
+!data/y_val_tecla_nltk_label2.pkl
+!data/y_test_tecla_nltk_label2.pkl
