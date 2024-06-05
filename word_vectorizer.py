@@ -11,6 +11,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import warnings
 from typing import Literal, Iterator, Any
+import numpy as np
 
 nltk.download('punkt')
 
@@ -384,31 +385,55 @@ class WordVectorizer:
 		if save:
 			self.model.save(self.model_path)
 	
-	def tsne(self, num_words: int=100) -> None:
+	def tsne(self, vocabulary: list[str]=[], num_words: int=100, perplexity: int=5, n_iter: int=10000, save: bool=True) -> None:
 		"""
 		Performs t-SNE on the word vectors and plots the results.
 
 		Parameters
 		----------
+		vocabulary : list[str]
+			The list of words to plot. If empty, the first num_words words are plotted.
 		num_words : int
 			The number of words to plot.
+		perplexity : int
+			The perplexity value to use in the t-SNE algorithm.
+			Low values create more clustered plots (local structure), while high values create more spread out plots (global structure).
+		n_iter : int
+			The number of iterations to use in the t-SNE algorithm.
+		save : bool
+			Whether to save the plot to the './results/plots' folder.
 		"""
 		assert num_words > 0, 'Number of words must be greater than 0.'
+		assert perplexity > 0, 'Perplexity must be greater than 0.'
+		assert n_iter > 0, 'Number of iterations must be greater than 0.'
 		assert self.model is not None, 'Model not trained.'
 
-		# Get the word vectors sorted by frequency
-		word_vectors = self.model.wv.vectors
-		word_labels = self.model.wv.index_to_key
+		if vocabulary:
+			word_vectors = np.array([self.model.wv[word] for word in vocabulary])
+			word_labels = vocabulary
+		else:
+			word_vectors = self.model.wv.vectors[:num_words]
+			word_labels = self.model.wv.index_to_key[:num_words]
+
 
 		# Perform t-SNE
-		tsne = TSNE(n_components=2, random_state=0, n_iter=10000, perplexity=5)
-		tsne_results = tsne.fit_transform(word_vectors[:num_words])
+		tsne = TSNE(n_components=2, random_state=42, max_iter=n_iter, perplexity=perplexity)
+		word_vectors_2d = tsne.fit_transform(word_vectors)
 
 		# Plot the results
-		plt.figure(figsize=(16, 16))
-		for i, label in enumerate(word_labels[:num_words]):
-			x, y = tsne_results[i, :]
-			plt.scatter(x, y)
-			plt.annotate(label, xy=(x, y), xytext=(5, 2), textcoords='offset points', ha='right', va='bottom')
-		plt.show()
+		plt.figure(figsize=(12, 12))
+		sns.set_context('notebook', font_scale=1.2)
+		sns.scatterplot(
+			x=word_vectors_2d[:,0], 
+			y=word_vectors_2d[:,1], 
+			hue=word_labels, 
+			legend=False)
+		for i, word in enumerate(word_labels):
+			plt.annotate(word, (word_vectors_2d[i,0], word_vectors_2d[i,1]))
+
+		if save:
+			full_model_name = os.path.basename(self.model_path)
+			full_model_name = full_model_name.split('.')[0]
+			plt.savefig(f'./results/plots/tsne_{full_model_name}.png')
+
 		
