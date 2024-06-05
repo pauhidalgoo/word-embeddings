@@ -326,11 +326,11 @@ def generate_vectorizer_barplot(results_df: pd.DataFrame, metric: str, compare: 
 
 if __name__ == '__main__':
 	# Evaluate the models
-	results_df = evaluate_models()
+	results_df = evaluate_models(save=True)
 
 	hide_win10 = False
-	hide_caps = False
-	hide_cbow = False
+	hide_caps = True
+	hide_cbow = True
 
 	# Filter the results by the negative keywords
 	if hide_win10:
@@ -339,6 +339,12 @@ if __name__ == '__main__':
 		results_df = filter_results(results_df, neg_keyword='caps')
 	if hide_cbow:
 		results_df = filter_results(results_df, neg_keyword='cbow')
+
+	results_df = filter_results(results_df, pos_keyword='1000mb')
+	results_df = filter_results(results_df, pos_keyword='win10')
+
+	# Save the filtered results to a CSV file
+	results_df.to_csv('./results/evaluation_results_filtered.csv', index=False)
 
 	# Empty the 'plots' directory before generating the plots
 	for file in os.listdir('./results/plots/'):
