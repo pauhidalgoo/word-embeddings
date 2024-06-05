@@ -1,5 +1,6 @@
 <!--- BADGES: START --->
-[![HF Models](https://img.shields.io/badge/%F0%9F%A4%97-models-yellow)](https://huggingface.co/models?library=sentence-transformers)
+[![HF Models](https://img.shields.io/badge/%F0%9F%A4%97-models-yellow)](https://huggingface.co/pauhidalgoo/finetuned-sts-roberta-base-ca-v2)
+[![Inline docs](https://inch-ci.org/github/dwyl/hapi-auth-jwt2.svg?branch=master)](P4_PLH__Cai_Selvas_Sala_i_Pau_Hidalgo_Pujol.pdf)
 <!--- BADGES: END --->
 
 # Word Embeddings
