@@ -456,7 +456,7 @@ class ClassificationWord2Vec:
 		average_recall = recall_score(y_true_classes, y_pred_classes, average='macro')
 		average_f1_score = f1_score(y_true_classes, y_pred_classes, average='macro')
 
-		print(f"Average accuracy (macro): {average_accuracy}")
+		print(f"Average accuracy: {average_accuracy}")
 		print(f"Average precision (macro): {average_precision}")
 		print(f"Average recall (macro): {average_recall}")
 		print(f"Average F1-score (macro): {average_f1_score}")
