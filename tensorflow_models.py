@@ -270,7 +270,23 @@ def model_6(embedding_size: int = 300, learning_rate: float = 1e-3) -> tf.keras.
     return model
 
 
-
+def model_7(hidden_size: int = 200, learning_rate: float = 1e-3) -> tf.keras.Model:
+    model = tf.keras.Sequential([
+    tf.keras.layers.Concatenate(axis=-1),
+    tf.keras.layers.Dense(2048, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Dense(1024, activation='relu'),
+    tf.keras.layers.Dropout(0.5),
+    tf.keras.layers.Dense(256, activation='relu'),
+    tf.keras.layers.Dropout(0.5), 
+    tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=l2(0.01)),
+    tf.keras.layers.Dropout(0.5), 
+    tf.keras.layers.Dense(1, activation="sigmoid"),
+    tf.keras.layers.Lambda(lambda x: x * 5)
+    ])
+    model.compile(loss='mean_absolute_error',
+                optimizer=tf.keras.optimizers.Adam(learning_rate))
+    return model
 
 
 
@@ -569,3 +585,61 @@ def model_embeddings_3(
     )
     return model
 
+def model_embeddings_7(
+    input_length: int,
+    dictionary_size: int = 1000,
+    embedding_size: int = 100,
+    pretrained_weights: Optional[np.ndarray] = None,
+    learning_rate: float = 1e-3,
+    trainable: bool = False,
+) -> tf.keras.Model:
+    # Input layers
+    input_1 = tf.keras.Input(shape=(input_length,), dtype=tf.int32)
+    input_2 = tf.keras.Input(shape=(input_length,), dtype=tf.int32)
+
+    # Embedding layer
+    if pretrained_weights is None:
+        embedding = tf.keras.Embedding(
+            input_dim=dictionary_size, output_dim=embedding_size, input_length=input_length, mask_zero=True
+        )
+    else:
+        dictionary_size = pretrained_weights.shape[0]
+        embedding_size = pretrained_weights.shape[1]
+        initializer = tf.keras.initializers.Constant(pretrained_weights)
+        embedding = tf.keras.Embedding(
+            input_dim=dictionary_size,
+            output_dim=embedding_size,
+            input_length=input_length,
+            mask_zero=True,
+            embeddings_initializer=initializer,
+            trainable=trainable,
+        )
+
+    # Apply embedding to input sequences
+    embedded_1 = embedding(input_1)
+    embedded_2 = embedding(input_2)
+
+    # Concatenate the embeddings
+    concatenated = tf.keras.Concatenate(axis=-1)([embedded_1, embedded_2])
+
+    # Flatten the concatenated embeddings
+    flattened = tf.keras.layers.Flatten()(concatenated)
+
+    # Dense layers
+    dense_1 = tf.keras.Dense(2048, activation='relu')(flattened)
+    dropout_1 = tf.keras.Dropout(0.5)(dense_1)
+    dense_2 = tf.keras.Dense(1024, activation='relu')(dropout_1)
+    dropout_2 = tf.keras.Dropout(0.5)(dense_2)
+    dense_3 = tf.keras.Dense(256, activation='relu')(dropout_2)
+    dropout_3 = tf.keras.Dropout(0.5)(dense_3)
+    dense_4 = tf.keras.Dense(64, activation='relu')(dropout_3)
+    dropout_4 = tf.keras.Dropout(0.5)(dense_4)
+    output = tf.keras.Dense(1)(dropout_4)
+
+    # Define the model
+    model = tf.keras.Model(inputs=[input_1, input_2], outputs=output)
+
+    # Compile the model
+    model.compile(loss='mean_squared_error', optimizer=tf.keras.optimizers.Adam(learning_rate))
+
+    return model
