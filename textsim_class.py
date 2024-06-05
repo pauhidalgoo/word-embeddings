@@ -231,8 +231,10 @@ class TextSimilarity:
                 self.exec_model = model_5(embedding_size= self.x_train[0].shape[1])
             elif id == 5:
                 self.exec_model = model_6(embedding_size= self.x_train[0].shape[1])
-            else:
+            elif id == 6:
                 self.exec_model = model_7()
+            else:
+                self.exec_model = model_8(embedding_size= self.x_train[0].shape[1])
             #tf.keras.utils.plot_model(model, show_shapes=True, show_layer_activations=True, )
             
         else:
@@ -248,26 +250,28 @@ class TextSimilarity:
                 self.exec_model = model_embeddings_3(self.sequence_len, dictionary_size= len(self.diccionari) +1,pretrained_weights=self._pretrained_weights, trainable=self.trainable, use_cosine=False)
             elif id == 5:
                 self.exec_model = model_embeddings_3(self.sequence_len,dictionary_size= len(self.diccionari) +1, pretrained_weights=self._pretrained_weights, trainable=self.trainable, use_cosine=True)
+            elif id == 6:
+                self.exec_model = model_embeddings_7(self.sequence_len,dictionary_size= len(self.diccionari) +1, pretrained_weights=self._pretrained_weights, trainable=self.trainable)
             else:
-                self.exec_model = model_embeddings_7(self.sequence_len,dictionary_size= len(self.diccionari) +1, pretrained_weights=self._pretrained_weights, trainable=self.trainable, use_cosine=True)
+                self.exec_model = model_embeddings_8(self.sequence_len,dictionary_size= len(self.diccionari) +1, pretrained_weights=self._pretrained_weights, trainable=self.trainable)
 
         #print(self.exec_model.summary())
 
 
     def train(self, num_epochs=256):
         early_stopping = EarlyStopping(
-            monitor='val_loss',  # metric to monitor
-            patience=25,         # number of epochs with no improvement after which training will be stopped
-            verbose=0,           # verbosity mode
-            restore_best_weights=True  # whether to restore model weights from the epoch with the best value of the monitored quantity
+            monitor='val_loss', 
+            patience=25,        
+            verbose=0,      
+            restore_best_weights=True  
         )
 
         reduce_lr = ReduceLROnPlateau(
-            monitor='val_loss',  # metric to monitor
-            factor=0.1,          # factor by which the learning rate will be reduced
-            patience=10,          # number of epochs with no improvement after which learning rate will be reduced
-            verbose=0,           # verbosity mode
-            min_lr=1e-7          # lower bound on the learning rate
+            monitor='val_loss',  
+            factor=0.1,         
+            patience=10,         
+            verbose=0,        
+            min_lr=1e-7     
         )
         self.exec_model.fit(self.train_dataset, epochs=num_epochs, validation_data=self.val_dataset, callbacks=[early_stopping, reduce_lr],  verbose=0)
         train_pearson = self.compute_pearson(self.x_train, self.y_train)
