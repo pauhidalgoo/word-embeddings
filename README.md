@@ -1,6 +1,6 @@
 # Word Embeddings
 
-> This repo contains the work done in the PMAAD course of the Artificial Intelligence Degree
+> This repo contains the work done in the Practica 4 of the PLH (NLP) course of the Artificial Intelligence Degree at UPC
 
 
 ## Table of Contents
