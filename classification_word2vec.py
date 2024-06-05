@@ -18,6 +18,7 @@ from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.utils import to_categorical
 
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 
 import warnings
 from typing import Callable
@@ -422,28 +423,42 @@ class ClassificationWord2Vec:
 
 		return result
 	
-	def plot_confusion_matrix(self) -> None:
-			"""
-			Plot the confusion matrix of the test set.
+	def metrics_and_confusion_matrix(self) -> tuple:
+		"""
+		Plot the confusion matrix of the test set.
 
-			Returns
-			-------
-			None
-			"""
-			assert self.model is not None, "Model not defined. Please, build and train the model before evaluating it."
-			assert self.trained, "Model not trained. Please, train the model before evaluating."
+		Returns
+		-------
+		tuple
+			average_accuracy, average_precision, average_recall, average_f1_score in the different classes.
+		"""
+		assert self.model is not None, "Model not defined. Please, build and train the model before evaluating it."
+		assert self.trained, "Model not trained. Please, train the model before evaluating."
 
-			y_pred = self.model.predict(self.X_test)
-			y_pred_classes = np.argmax(y_pred, axis=1)
-			y_true_classes = np.argmax(self.y_test, axis=1)
+		y_pred = self.model.predict(self.X_test)
+		y_pred_classes = np.argmax(y_pred, axis=1)
+		y_true_classes = np.argmax(self.y_test, axis=1)
 
-			cm = confusion_matrix(y_true_classes, y_pred_classes)
-			disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=np.arange(self.num_classes))
+		cm = confusion_matrix(y_true_classes, y_pred_classes)
+		disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=np.arange(self.num_classes))
 
-			if self.num_classes <= 10:
-				fig, ax = plt.subplots(figsize=(10, 10))
-			else:
-				fig, ax = plt.subplots(figsize=(20, 20))
-			disp.plot(ax=ax, cmap='Blues')
-			plt.title('Confusion Matrix')
-			plt.show()
+		if self.num_classes <= 10:
+			fig, ax = plt.subplots(figsize=(10, 10))
+		else:
+			fig, ax = plt.subplots(figsize=(20, 20))
+		disp.plot(ax=ax, cmap='Blues')
+		plt.title('Confusion Matrix')
+		plt.show()
+
+		# Print metrics (macro)
+		average_accuracy = accuracy_score(y_true_classes, y_pred_classes)
+		average_precision = precision_score(y_true_classes, y_pred_classes, average='macro')
+		average_recall = recall_score(y_true_classes, y_pred_classes, average='macro')
+		average_f1_score = f1_score(y_true_classes, y_pred_classes, average='macro')
+
+		print(f"Average accuracy (macro): {average_accuracy}")
+		print(f"Average precision (macro): {average_precision}")
+		print(f"Average recall (macro): {average_recall}")
+		print(f"Average F1-score (macro): {average_f1_score}")
+
+		return average_accuracy, average_precision, average_recall, average_f1_score
